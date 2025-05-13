@@ -1,0 +1,79 @@
+{% extends 'app/base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/analytics.css">
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <h1 class="page-title">Analytics</h1>
+    
+    <div class="analytics-charts-container">
+        <div class="analytics-chart-card">
+            <h3>Population Growth Over Time</h3>
+            <canvas id="populationTimeChart"></canvas>
+        </div>
+        
+        <div class="analytics-chart-card">
+            <h3>Top Species by Count</h3>
+            <canvas id="speciesCountChart"></canvas>
+        </div>
+        
+        <div class="analytics-chart-card">
+            <h3>Family Distribution</h3>
+            <canvas id="familyDistributionChart"></canvas>
+        </div>
+        
+        <div class="analytics-chart-card">
+            <h3>Population by Family</h3>
+            {% if plot_data %}
+            <img src="data:image/png;base64,{{ plot_data }}" alt="Population by Family" class="matplotlib-chart">
+            {% else %}
+            <div class="no-data-message">No data available to generate chart</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="analytics-advanced-container">
+        <h2>Environmental Science Analytics</h2>
+        
+        <div class="analytics-charts-container">
+            <div class="analytics-chart-card">
+                <h3>Species Conservation Status</h3>
+                <canvas id="conservationStatusChart"></canvas>
+            </div>
+            
+            <div class="analytics-chart-card">
+                <h3>Annual Growth Rate</h3>
+                <canvas id="growthRateChart"></canvas>
+            </div>
+            
+            <div class="analytics-chart-card">
+                <h3>Biodiversity Index</h3>
+                <canvas id="biodiversityChart"></canvas>
+            </div>
+            
+            <div class="analytics-chart-card">
+                <h3>Ecological Distribution</h3>
+                <canvas id="ecologicalDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="analytics-metrics-container">
+        <div class="metrics-card">
+            <h3>Tree Distribution Map</h3>
+            <div id="distributionMap" class="mini-map"></div>
+        </div>
+        
+        <div class="metrics-card">
+            <h3>Species Richness Over Time</h3>
+            <canvas id="speciesRichnessChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/analytics.js"></script>
+{% endblock %}

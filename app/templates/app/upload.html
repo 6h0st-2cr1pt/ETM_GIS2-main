@@ -1,0 +1,188 @@
+{% extends 'app/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/upload.css">
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+   <h1 class="page-title">Upload Data</h1>
+   
+   <div class="upload-content">
+       <div class="upload-section csv-upload-section">
+           <div class="upload-card">
+               <div class="upload-card-header">
+                   <h2>Upload CSV</h2>
+                   <p>Upload a CSV file with tree data.</p>
+               </div>
+               
+               <div class="csv-upload-area" id="dropzone">
+                   <form method="post" enctype="multipart/form-data" id="csv-upload-form">
+                       {% csrf_token %}
+                       <div class="drag-drop-area">
+                           <div class="drag-drop-icon">
+                               <i class="fas fa-file-csv"></i>
+                           </div>
+                           <div class="drag-drop-text">
+                               <p>Drag & Drop your CSV file here or</p>
+                               <label for="csv_file" class="btn btn-outline-primary">Browse Files</label>
+                               <input type="file" name="csv_file" id="csv_file" class="d-none" accept=".csv">
+                           </div>
+                       </div>
+                       
+                       <div class="selected-file" id="selected-file-info">
+                           <p>No file selected</p>
+                       </div>
+                       
+                       <div class="upload-actions">
+                           <button type="submit" name="submit_csv" class="btn btn-primary" id="upload-csv-btn" disabled>
+                               <i class="fas fa-upload"></i> Upload CSV
+                           </button>
+                       </div>
+                   </form>
+               </div>
+               
+               <div class="csv-format-toggle">
+                   <button class="btn btn-sm btn-outline-secondary" id="toggle-format-info">
+                       <span class="toggle-text">Show Format Info</span> <i class="fas fa-chevron-down"></i>
+                   </button>
+               </div>
+               
+               <div class="csv-format-info" style="display: none;">
+                   <h4>Required CSV Format</h4>
+                   <p>Your CSV file should have the following columns:</p>
+                   <div class="table-responsive">
+                       <table class="table table-sm">
+                           <thead>
+                               <tr>
+                                   <th>common_name</th>
+                                   <th>scientific_name</th>
+                                   <th>family</th>
+                                   <th>genus</th>
+                                   <th>population</th>
+                                   <th>health_status</th>
+                                   <th>latitude</th>
+                                   <th>longitude</th>
+                                   <th>year</th>
+                                   <th>notes</th>
+                               </tr>
+                           </thead>
+                           <tbody>
+                               <tr>
+                                   <td>Tindalo</td>
+                                   <td>Afzelia rhomboidea</td>
+                                   <td>Fabaceae</td>
+                                   <td>Afzelia</td>
+                                   <td>120</td>
+                                   <td>good</td>
+                                   <td>10.4234</td>
+                                   <td>123.1234</td>
+                                   <td>2023</td>
+                                   <td>Healthy population</td>
+                               </tr>
+                           </tbody>
+                       </table>
+                   </div>
+               </div>
+           </div>
+       </div>
+       
+       <div class="upload-section manual-entry-section">
+           <div class="upload-card">
+               <div class="upload-card-header">
+                   <h2>Manual Entry</h2>
+                   <p>Add a single tree record by filling out the form below.</p>
+               </div>
+               
+               <div class="manual-entry-form">
+                   <form method="post" id="manual-entry-form">
+                       {% csrf_token %}
+                       <div class="form-grid">
+                           <div class="form-group">
+                               <label for="common_name">Common Name</label>
+                               <input type="text" name="common_name" id="common_name" class="form-control" required>
+                           </div>
+                           <div class="form-group">
+                               <label for="scientific_name">Scientific Name</label>
+                               <input type="text" name="scientific_name" id="scientific_name" class="form-control" required>
+                           </div>
+                           <div class="form-group">
+                               <label for="family">Family</label>
+                               <input type="text" name="family" id="family" class="form-control" required>
+                           </div>
+                           <div class="form-group">
+                               <label for="genus">Genus</label>
+                               <input type="text" name="genus" id="genus" class="form-control" required>
+                           </div>
+                           <div class="form-group">
+                               <label for="population">Population</label>
+                               <input type="number" name="population" id="population" class="form-control" min="1" required>
+                           </div>
+                           <div class="form-group">
+                               <label for="health_status">Health Status</label>
+                               <select name="health_status" id="health_status" class="form-select" required>
+                                   <option value="very_poor">Very Poor</option>
+                                   <option value="poor">Poor</option>
+                                   <option value="good" selected>Good</option>
+                                   <option value="very_good">Very Good</option>
+                                   <option value="excellent">Excellent</option>
+                               </select>
+                           </div>
+                           <div class="form-group">
+                               <label for="year">Year</label>
+                               <input type="number" name="year" id="year" class="form-control" required>
+                           </div>
+                           <div class="form-group">
+                               <label for="latitude">Latitude</label>
+                               <input type="number" name="latitude" id="latitude" class="form-control" step="0.000001" required>
+                           </div>
+                           <div class="form-group">
+                               <label for="longitude">Longitude</label>
+                               <input type="number" name="longitude" id="longitude" class="form-control" step="0.000001" required>
+                           </div>
+                       </div>
+                       
+                       <div class="form-group notes-group">
+                           <label for="notes">Notes</label>
+                           <textarea name="notes" id="notes" class="form-control" rows="2"></textarea>
+                       </div>
+                       
+                       <div class="form-actions">
+                           <button type="submit" name="submit_manual" class="btn btn-primary">
+                               <i class="fas fa-save"></i> Save Record
+                           </button>
+                       </div>
+                   </form>
+               </div>
+           </div>
+       </div>
+   </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/upload.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('toggle-format-info');
+        const formatInfo = document.querySelector('.csv-format-info');
+        const toggleText = document.querySelector('.toggle-text');
+        const toggleIcon = toggleBtn.querySelector('i');
+        
+        toggleBtn.addEventListener('click', function() {
+            if (formatInfo.style.display === 'none') {
+                formatInfo.style.display = 'block';
+                toggleText.textContent = 'Hide Format Info';
+                toggleIcon.classList.remove('fa-chevron-down');
+                toggleIcon.classList.add('fa-chevron-up');
+            } else {
+                formatInfo.style.display = 'none';
+                toggleText.textContent = 'Show Format Info';
+                toggleIcon.classList.remove('fa-chevron-up');
+                toggleIcon.classList.add('fa-chevron-down');
+            }
+        });
+    });
+</script>
+{% endblock %}

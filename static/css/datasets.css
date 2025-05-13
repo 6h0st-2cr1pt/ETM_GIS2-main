@@ -1,0 +1,170 @@
+/* Datasets Styles */
+.datasets-container {
+    padding: 1rem 0;
+  }
+  
+  .datasets-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+  }
+  
+  .datasets-search {
+    flex-grow: 1;
+    max-width: 400px;
+  }
+  
+  .datasets-table-container {
+    background: var(--bg-card);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.5rem;
+    overflow: hidden;
+  }
+  
+  .datasets-table {
+    width: 100%;
+    color: var(--text-primary);
+  }
+  
+  .datasets-table thead th {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    font-weight: 600;
+    padding: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+  }
+  
+  .datasets-table tbody td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+  }
+  
+  .datasets-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .datasets-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  /* Table pagination */
+  .datasets-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+  }
+  
+  .pagination-info {
+    color: var(--text-secondary);
+  }
+  
+  .pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .pagination-button {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .pagination-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .pagination-button.active {
+    background-color: var(--color-primary);
+    color: white;
+  }
+  
+  /* Table actions */
+  .table-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .action-button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: var(--border-radius-sm);
+    transition: color 0.3s ease, background-color 0.3s ease;
+  }
+  
+  .action-button:hover {
+    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .action-edit:hover {
+    color: var(--color-primary);
+  }
+  
+  .action-delete:hover {
+    color: var(--color-danger);
+  }
+  
+  /* Light mode specific styles */
+  html[data-theme="light"] .datasets-table-container {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  html[data-theme="light"] .datasets-table thead th {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  html[data-theme="light"] .datasets-table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+  
+  html[data-theme="light"] .pagination-button {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  html[data-theme="light"] .pagination-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  html[data-theme="light"] .action-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .datasets-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .datasets-search {
+      max-width: 100%;
+    }
+  
+    .datasets-table-container {
+      padding: 1rem;
+      overflow-x: auto;
+    }
+  }
+  

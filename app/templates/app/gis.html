@@ -1,0 +1,137 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="gis-container">
+    <div class="floating-search-container">
+        <div class="search-bar">
+            <input type="text" id="locationSearch" placeholder="Search for a location...">
+            <button id="searchButton"><i class="fas fa-search"></i></button>
+        </div>
+    </div>
+    <div id="map" class="gis-map"></div>
+    
+    <div class="floating-controls">
+        <div class="control-group map-type-control">
+            <button class="control-toggle" id="mapTypeToggle">
+                <i class="fas fa-layer-group"></i>
+            </button>
+            <div class="control-dropdown">
+                <h4>Map Type</h4>
+                <div class="control-options">
+                    <div class="control-option">
+                        <input type="radio" name="mapType" id="mapTypeDark" value="dark" checked>
+                        <label for="mapTypeDark">Dark</label>
+                    </div>
+                    <div class="control-option">
+                        <input type="radio" name="mapType" id="mapTypeLight" value="light">
+                        <label for="mapTypeLight">Light</label>
+                    </div>
+                    <div class="control-option">
+                        <input type="radio" name="mapType" id="mapTypeSatellite" value="satellite">
+                        <label for="mapTypeSatellite">Satellite</label>
+                    </div>
+                    <div class="control-option">
+                        <input type="radio" name="mapType" id="mapTypeStreet" value="street">
+                        <label for="mapTypeStreet">Street</label>
+                    </div>
+                    <div class="control-option">
+                        <input type="radio" name="mapType" id="mapTypeTopographic" value="topographic">
+                        <label for="mapTypeTopographic">Topographic</label>
+                    </div>
+                    <div class="control-option">
+                        <input type="radio" name="mapType" id="mapTypeDarkNormal" value="dark-normal">
+                        <label for="mapTypeDarkNormal">Dark Normal</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-group tree-filter-control">
+            <button class="control-toggle" id="treeFilterToggle">
+                <i class="fas fa-filter"></i>
+            </button>
+            <div class="control-dropdown">
+                <h4>Filter Trees</h4>
+                <div class="control-options tree-filter-list">
+                    <div class="control-option">
+                        <input type="radio" name="treeFilter" id="allTrees" value="all" checked>
+                        <label for="allTrees">All Trees</label>
+                    </div>
+                    
+                    {% for species in tree_species %}
+                    <div class="control-option">
+                        <input type="radio" name="treeFilter" id="tree{{ species.id }}" value="{{ species.id }}">
+                        <label for="tree{{ species.id }}">{{ species.common_name }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-group layer-control">
+            <button class="control-toggle" id="layerControlToggle">
+                <i class="fas fa-map-marked-alt"></i>
+            </button>
+            <div class="control-dropdown">
+                <h4>Map Layers</h4>
+                <div class="control-options layer-controls-list" id="layerControlsList">
+                    <!-- Layer controls will be added dynamically -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-group tools-control">
+            <button class="control-toggle" id="toolsToggle">
+                <i class="fas fa-tools"></i>
+            </button>
+            <div class="control-dropdown">
+                <h4>Map Tools</h4>
+                <div class="control-options">
+                    <div class="control-option">
+                        <button id="centerMapBtn" class="tool-button">
+                            <i class="fas fa-crosshairs"></i> Center Map
+                        </button>
+                    </div>
+                    <div class="control-option">
+                        <button id="measureDistanceBtn" class="tool-button">
+                            <i class="fas fa-ruler"></i> Measure Distance
+                        </button>
+                    </div>
+                    <div class="control-option">
+                        <button id="drawPolygonBtn" class="tool-button">
+                            <i class="fas fa-draw-polygon"></i> Draw Area
+                        </button>
+                    </div>
+                    <div class="control-option">
+                        <button id="exportDataBtn" class="tool-button">
+                            <i class="fas fa-file-export"></i> Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="{% static 'css/gis.css' %}" />
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="{% static 'js/gis.js' %}"></script>
+<script>
+  // Ensure map is properly initialized
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("GIS page loaded, map should be initializing...");
+    // Force a resize event after a short delay to ensure the map renders correctly
+    setTimeout(function() {
+      window.dispatchEvent(new Event('resize'));
+    }, 500);
+  });
+</script>
+{% endblock %}

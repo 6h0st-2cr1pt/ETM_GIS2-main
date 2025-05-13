@@ -1,0 +1,145 @@
+{% extends 'app/base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/reports.css">
+{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <h1 class="page-title">Generate Reports</h1>
+    
+    <div class="reports-content">
+        <div class="reports-sidebar">
+            <div class="report-options-card">
+                <div class="card-header">
+                    <h2>Report Options</h2>
+                </div>
+                <div class="card-body">
+                    <form id="reportForm">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label for="reportType">Report Type</label>
+                            <select class="form-select" id="reportType" name="report_type" required>
+                                <option value="">-- Select Report Type --</option>
+                                <option value="species_distribution">Species Distribution</option>
+                                <option value="population_trends">Population Trends</option>
+                                <option value="health_analysis">Health Status Analysis</option>
+                                <option value="conservation_status">Conservation Status</option>
+                                <option value="spatial_density">Spatial Density</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="timeRange">Time Range</label>
+                            <select class="form-select" id="timeRange" name="time_range">
+                                <option value="all">All Available Data</option>
+                                <option value="last_5">Last 5 Years</option>
+                                <option value="last_10">Last 10 Years</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        
+                        <div class="custom-time-range d-none">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-group mb-3">
+                                        <label for="startYear">Start Year</label>
+                                        <input type="number" class="form-control" id="startYear" name="start_year">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-group mb-3">
+                                        <label for="endYear">End Year</label>
+                                        <input type="number" class="form-control" id="endYear" name="end_year">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="speciesFilter">Species Filter</label>
+                            <select class="form-select" id="speciesFilter" name="species_filter">
+                                <option value="all">All Species</option>
+                                {% for species in species_list %}
+                                <option value="{{ species.id }}">{{ species.common_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="locationFilter">Location Filter</label>
+                            <select class="form-select" id="locationFilter" name="location_filter">
+                                <option value="all">All Locations</option>
+                                {% for location in location_list %}
+                                <option value="{{ location.id }}">{{ location.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Report Sections</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeCharts" name="include_charts" checked>
+                                <label class="form-check-label" for="includeCharts">Include Charts</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeMap" name="include_map" checked>
+                                <label class="form-check-label" for="includeMap">Include Map</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeTable" name="include_table" checked>
+                                <label class="form-check-label" for="includeTable">Include Data Table</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="outputFormat">Output Format</label>
+                            <select class="form-select" id="outputFormat" name="output_format">
+                                <option value="pdf">PDF</option>
+                                <option value="html">HTML</option>
+                                <option value="excel">Excel</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" id="generateReportBtn" class="btn btn-primary w-100">
+                                <i class="fas fa-file-pdf"></i> Generate Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-preview">
+            <div class="report-preview-card">
+                <div class="card-header">
+                    <h2>Report Preview</h2>
+                    <div class="preview-actions">
+                        <button id="printReportBtn" class="btn btn-sm btn-outline-primary" disabled>
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                        <button id="downloadReportBtn" class="btn btn-sm btn-primary" disabled>
+                            <i class="fas fa-download"></i> Download
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="reportPreviewContent">
+                        <div class="no-report-message">
+                            <i class="fas fa-file-alt"></i>
+                            <p>Select report options and click "Generate Report" to see a preview.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="/static/js/reports.js"></script>
+{% endblock %}

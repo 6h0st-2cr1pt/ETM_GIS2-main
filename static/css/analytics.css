@@ -1,0 +1,106 @@
+/* Analytics Styles */
+.analytics-container {
+    padding: 1rem 0;
+  }
+  
+  .analytics-charts-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .analytics-chart-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.5rem;
+    height: 350px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+  }
+  
+  .analytics-chart-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
+  
+  .analytics-chart-card h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+  
+  .analytics-advanced-container {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .analytics-advanced-container h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    border-left: 4px solid var(--color-primary);
+    padding-left: 1rem;
+  }
+  
+  .analytics-metrics-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  
+  .metrics-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.5rem;
+    height: 350px;
+  }
+  
+  .metrics-card h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+  
+  .mini-map {
+    width: 100%;
+    height: calc(100% - 40px);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+  }
+  
+  .matplotlib-chart {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  
+  .no-data-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(100% - 40px);
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 992px) {
+    .analytics-charts-container,
+    .analytics-metrics-container {
+      grid-template-columns: 1fr;
+    }
+  }
+  
