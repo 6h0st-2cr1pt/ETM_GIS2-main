@@ -1,325 +1,472 @@
-/* Upload Styles */
+/* Main container */
 .upload-container {
-  padding: 1rem;
-  max-width: 1400px;
+  padding: 20px;
+  max-width: 1200px;
   margin: 0 auto;
-  height: calc(100vh - 80px); /* Adjust based on your header height */
-  display: flex;
-  flex-direction: column;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
 }
 
 .page-title {
-  margin-bottom: 1rem;
-  color: var(--text-primary);
-  font-size: 1.75rem;
-  font-weight: 600;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--primary-color, #2c3e50);
+  text-align: center;
 }
 
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+}
+
+.tab-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  padding: 12px 24px;
+  margin: 0 8px;
+  border-radius: 8px 8px 0 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.tab-button.active {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tab-button.active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  border-radius: 3px;
+}
+
+/* Upload Content */
 .upload-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  flex: 1;
-  min-height: 0; /* Important for preventing overflow */
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .upload-section {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
+.upload-section.active {
+  opacity: 1;
+}
+
+.tab-content {
+  transition: opacity 0.3s ease;
+}
+
+/* Upload Card */
 .upload-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border-radius: var(--card-border-radius);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 1.25rem;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+.upload-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
 }
 
 .upload-card-header {
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.75rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .upload-card-header h2 {
+  margin: 0;
   font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  color: var(--text-primary);
+  color: white;
 }
 
 .upload-card-header p {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  margin-bottom: 0;
+  margin: 0.5rem 0 0;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* CSV Upload Area */
 .csv-upload-area {
-  margin-bottom: 1rem;
+  padding: 1.5rem;
 }
 
 .drag-drop-area {
-  border: 2px dashed var(--border-color);
-  border-radius: var(--border-radius-md);
-  padding: 1.5rem 1rem;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 2rem;
   text-align: center;
-  cursor: pointer;
   transition: all 0.3s ease;
-  background-color: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
 }
 
 .drag-drop-area:hover,
 .drag-drop-area.drag-over {
-  border-color: var(--color-primary);
-  background-color: rgba(var(--color-primary-rgb), 0.05);
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
 }
 
 .drag-drop-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.drag-drop-text {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 3rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 1rem;
 }
 
 .drag-drop-text p {
-  margin-bottom: 0.5rem;
+  margin: 0.5rem 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.btn-outline-primary {
+  color: #4caf50;
+  border: 1px solid #4caf50;
+  padding: 8px 16px;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-block;
+  margin-top: 1rem;
+}
+
+.btn-outline-primary:hover {
+  background: #4caf50;
+  color: white;
 }
 
 .selected-file {
-  margin-top: 0.75rem;
-  padding: 0.5rem;
-  border-radius: var(--border-radius-sm);
-  background-color: rgba(255, 255, 255, 0.05);
-  font-size: 0.9rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
 }
 
 .selected-file-details {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--text-primary);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .selected-file-error {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--color-danger);
+  color: #ff5252;
 }
 
 .upload-actions {
-  margin-top: 0.75rem;
-  text-align: right;
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
 }
 
-.upload-actions .btn {
-  padding: 0.5rem 1.5rem;
+.btn-primary {
+  background: linear-gradient(135deg, #4caf50, #8bc34a);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #43a047, #7cb342);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.btn-primary:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* CSV Format Info */
-.csv-format-toggle {
-  margin-bottom: 0.75rem;
-  text-align: center;
-}
-
 .csv-format-info {
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-color);
-  overflow-y: auto;
-  max-height: 200px;
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .csv-format-info h4 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--text-primary);
+  margin-top: 0;
+  color: white;
 }
 
-.csv-format-info .table {
-  margin-top: 0.5rem;
-  color: var(--text-primary);
-  font-size: 0.8rem;
+.table-responsive {
+  overflow-x: auto;
+  margin-top: 1rem;
 }
 
-.csv-format-info .table th {
-  font-size: 0.8rem;
-  color: var(--color-primary);
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+}
+
+.table th {
+  background: rgba(0, 0, 0, 0.2);
+  font-weight: 500;
 }
 
 /* Manual Entry Form */
 .manual-entry-form {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.manual-entry-form form {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  padding: 1.5rem;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  overflow-y: auto;
-  padding-right: 0.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .form-group {
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.notes-group {
-  margin-top: 0.5rem;
+.form-group.full-width {
+  grid-column: 1 / -1;
 }
 
-.manual-entry-form label {
+.form-group label {
   display: block;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
-  color: var(--text-primary);
-  font-size: 0.9rem;
 }
 
-.manual-entry-form .form-control,
-.manual-entry-form .form-select {
+.form-control {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--border-radius-sm);
-  border: 1px solid var(--border-color);
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  font-size: 0.9rem;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  transition: all 0.3s ease;
 }
 
-.manual-entry-form .form-control:focus,
-.manual-entry-form .form-select:focus {
-  border-color: var(--color-primary);
+.form-control:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.25);
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
 }
 
-.manual-entry-form textarea.form-control {
-  min-height: 60px;
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.form-text {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.25rem;
+}
+
+textarea.form-control {
   resize: vertical;
+  min-height: 100px;
 }
 
 .form-actions {
-  margin-top: auto;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-color);
-  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
 }
 
-.form-actions .btn {
-  padding: 0.5rem 1.5rem;
+/* Health Status Section */
+.health-status-section {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.health-status-section h3 {
+  margin-top: 0;
+  color: white;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.health-status-info {
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1.5rem;
+}
+
+.health-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.health-status-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.health-status-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.health-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 1.5rem;
+}
+
+.health-icon.healthy {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+
+.health-icon.good {
+  background: rgba(139, 195, 74, 0.2);
+  color: #8bc34a;
+}
+
+.health-icon.bad {
+  background: rgba(255, 152, 0, 0.2);
+  color: #ff9800;
+}
+
+.health-icon.deceased {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+
+.health-status-card label {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: white;
   font-weight: 500;
 }
 
-/* Light mode specific styles */
-html[data-theme="light"] .manual-entry-form .form-control,
-html[data-theme="light"] .manual-entry-form .form-select {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: #333;
-  border-color: rgba(0, 0, 0, 0.2);
+.health-count {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 500;
 }
 
-html[data-theme="light"] .drag-drop-area {
-  background-color: rgba(0, 0, 0, 0.03);
+.health-status-validation {
+  margin-top: 1.5rem;
 }
 
-html[data-theme="light"] .selected-file {
-  background-color: rgba(0, 0, 0, 0.05);
+.progress {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
 }
 
-html[data-theme="light"] .upload-card {
-  background-color: rgba(255, 255, 255, 0.95);
-  border-color: rgba(0, 0, 0, 0.1);
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  transition: width 0.3s ease;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 10px;
+  color: white;
 }
 
-html[data-theme="light"] .csv-format-info .table,
-html[data-theme="light"] .upload-card-header h2,
-html[data-theme="light"] .csv-format-info h4,
-html[data-theme="light"] .manual-entry-form label {
-  color: #333;
+#health-status-message {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
 }
 
-html[data-theme="light"] .upload-card-header p,
-html[data-theme="light"] .drag-drop-text,
-html[data-theme="light"] .drag-drop-icon {
-  color: #555;
+/* Error states */
+.form-control.error {
+  border-color: #f44336;
 }
 
-/* Dark mode specific styles */
-html[data-theme="dark"] .manual-entry-form .form-control,
-html[data-theme="dark"] .manual-entry-form .form-select {
-  background-color: rgba(0, 0, 0, 0.2);
-  color: #f0f0f0;
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-html[data-theme="dark"] .csv-format-info .table,
-html[data-theme="dark"] .upload-card-header h2,
-html[data-theme="dark"] .csv-format-info h4,
-html[data-theme="dark"] .manual-entry-form label {
-  color: #f0f0f0;
-}
-
-html[data-theme="dark"] .upload-card-header p,
-html[data-theme="dark"] .drag-drop-text,
-html[data-theme="dark"] .drag-drop-icon {
-  color: #ccc;
+.error-message {
+  color: #f44336;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
 /* Responsive adjustments */
-@media (max-width: 1200px) {
+@media (max-width: 768px) {
   .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .health-status-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-}
 
-@media (max-width: 992px) {
-  .upload-content {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    overflow-y: auto;
-  }
-
-  .upload-section {
-    height: auto;
-  }
-
-  .upload-card {
-    height: auto;
-  }
-
-  .form-grid {
-    max-height: none;
-    overflow-y: visible;
+  .tab-button {
+    padding: 8px 16px;
+    font-size: 0.875rem;
   }
 }
 
-@media (max-width: 576px) {
-  .form-grid {
+@media (max-width: 480px) {
+  .health-status-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.upload-section {
+  animation: fadeIn 0.5s ease forwards;
 }

@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <p class="report-subtitle">Endemic Trees Monitoring System</p>
           <p class="report-date">Generated on ${dateStr} at ${timeStr}</p>
         </div>
-        
+
         <div class="report-section">
           <h2 class="report-section-title">Executive Summary</h2>
           <p>This report provides an analysis of endemic tree data collected by the Endemic Trees Monitoring System. The report includes information on tree species, population trends, health status, and spatial distribution.</p>

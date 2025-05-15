@@ -133,6 +133,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Create a layer group for tree markers
   const treeLayer = L.layerGroup().addTo(map)
 
+  // Create a layer group for seed markers
+  const seedLayer = L.layerGroup().addTo(map)
+
   // Create layer groups for additional layers - Fix for issue #12
   const additionalLayers = {
     heatmap: L.layerGroup(),
@@ -227,8 +230,9 @@ document.addEventListener("DOMContentLoaded", () => {
   ]
   let colorIndex = 0
 
-  // Load all trees by default
+  // Load all trees and seeds by default
   loadTrees()
+  loadSeeds()
 
   // Map type control change event
   document.querySelectorAll('input[name="mapType"]').forEach((radio) => {
@@ -403,6 +407,97 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Error loading trees:", error)
         alert("Error loading tree data. Please check the console for details.")
       })
+  }
+
+  // Function to load all seeds
+  function loadSeeds() {
+    // Clear existing seed markers
+    seedLayer.clearLayers()
+
+    // Add a console log to debug
+    console.log("Loading all seeds...")
+
+    // Use the correct API endpoint
+    fetch("/api/seed-data/")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`)
+        }
+        return response.json()
+      })
+      .then((data) => {
+        console.log("Seed data received:", data)
+        addSeedsToMap(data)
+      })
+      .catch((error) => {
+        console.error("Error loading seeds:", error)
+        alert("Error loading seed data. Please check the console for details.")
+      })
+  }
+
+  // Function to add seed markers to the map
+  function addSeedsToMap(geojson) {
+    // Check if we have features
+    if (!geojson.features || geojson.features.length === 0) {
+      console.log("No seed data found in the response")
+      return
+    }
+
+    console.log(`Adding ${geojson.features.length} seeds to the map`)
+
+    // Add GeoJSON to map
+    const geoJsonLayer = L.geoJSON(geojson, {
+      pointToLayer: (feature, latlng) => {
+        // Get color based on germination status
+        const status = feature.properties.germination_status
+        let color = "#8B4513" // Default brown color for seeds
+
+        // Color based on germination status
+        if (status === "not_germinated") {
+          color = "#8B4513" // Brown
+        } else if (status === "germinating") {
+          color = "#9ACD32" // Yellow-green
+        } else if (status === "partially_germinated") {
+          color = "#32CD32" // Lime green
+        } else if (status === "fully_germinated") {
+          color = "#228B22" // Forest green
+        } else if (status === "failed") {
+          color = "#A52A2A" // Brown-red
+        }
+
+        // Create a diamond marker for seeds
+        return L.divIcon({
+          html: `<div style="width: 12px; height: 12px; background-color: ${color}; transform: rotate(45deg); border: 1.5px solid white;"></div>`,
+          className: "seed-marker",
+          iconSize: [12, 12],
+          iconAnchor: [6, 6],
+        })
+      },
+      onEachFeature: (feature, layer) => {
+        const properties = feature.properties
+
+        // Create popup content
+        const popupContent = `
+          <div class="tree-popup seed-popup">
+            <h3>${properties.common_name} Seeds</h3>
+            <p><em>${properties.scientific_name}</em></p>
+            <table class="popup-table">
+              <tr><td>Family:</td><td>${properties.family}</td></tr>
+              <tr><td>Genus:</td><td>${properties.genus}</td></tr>
+              <tr><td>Quantity:</td><td>${properties.quantity}</td></tr>
+              <tr><td>Planting Date:</td><td>${properties.planting_date}</td></tr>
+              <tr><td>Germination:</td><td>${properties.germination_status.replace(/_/g, " ")}</td></tr>
+              <tr><td>Survival Rate:</td><td>${properties.survival_rate}%</td></tr>
+              <tr><td>Location:</td><td>${properties.location}</td></tr>
+          </table>
+          ${properties.notes ? `<p class="popup-notes">${properties.notes}</p>` : ""}
+        </div>
+      `
+
+        // Bind popup to marker
+        layer.bindPopup(popupContent)
+      },
+    }).addTo(seedLayer)
   }
 
   // Function to load filtered trees
@@ -733,9 +828,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   refreshButton.addEventListener("click", () => {
     loadTrees()
+    loadSeeds()
     // Hide the filtered data container when refreshing all data
     filteredDataContainer.style.display = "none"
-    alert("Tree data refreshed!")
+    alert("Tree and seed data refreshed!")
   })
 
   document.querySelector(".gis-container").appendChild(refreshButton)
@@ -770,6 +866,50 @@ document.addEventListener("DOMContentLoaded", () => {
       `
     }
 
+    // Add germination status legend
+    legendContent += `
+    <div class="germination-legend">
+      <h4>Seed Status</h4>
+      <div class="germination-item">
+        <span class="germination-color" style="background-color: #8B4513"></span>
+        <span class="germination-label">Not Germinated</span>
+      </div>
+      <div class="germination-item">
+        <span class="germination-color" style="background-color: #9ACD32"></span>
+        <span class="germination-label">Germinating</span>
+      </div>
+      <div class="germination-item">
+        <span class="germination-color" style="background-color: #32CD32"></span>
+        <span class="germination-label">Partially Germinated</span>
+      </div>
+      <div class="germination-item">
+        <span class="germination-color" style="background-color: #228B22"></span>
+        <span class="germination-label">Fully Germinated</span>
+      </div>
+      <div class="germination-item">
+        <span class="germination-color" style="background-color: #A52A2A"></span>
+        <span class="germination-label">Failed</span>
+      </div>
+    </div>
+  `
+
     legendDiv.innerHTML = legendContent
   }
+
+  // Entity type control change event
+  document.getElementById("showTrees").addEventListener("change", function () {
+    if (this.checked) {
+      map.addLayer(treeLayer)
+    } else {
+      map.removeLayer(treeLayer)
+    }
+  })
+
+  document.getElementById("showSeeds").addEventListener("change", function () {
+    if (this.checked) {
+      map.addLayer(seedLayer)
+    } else {
+      map.removeLayer(seedLayer)
+    }
+  })
 })

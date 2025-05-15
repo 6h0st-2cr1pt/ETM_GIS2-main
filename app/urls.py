@@ -22,6 +22,7 @@ urlpatterns = [
 
     # API endpoints
     path('api/tree-data/', views.tree_data, name='tree_data'),
+    path('api/seed-data/', views.seed_data, name='seed_data'),
     path('api/filter-trees/<int:species_id>/', views.filter_trees, name='filter_trees'),
     path('api/analytics-data/', views.analytics_data, name='analytics_data'),
     path('api/set-theme/', views.set_theme, name='set_theme'),

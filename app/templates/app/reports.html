@@ -7,7 +7,7 @@
 {% block content %}
 <div class="reports-container">
     <h1 class="page-title">Generate Reports</h1>
-    
+
     <div class="reports-content">
         <div class="reports-sidebar">
             <div class="report-options-card">
@@ -28,7 +28,7 @@
                                 <option value="spatial_density">Spatial Density</option>
                             </select>
                         </div>
-                        
+
                         <div class="form-group mb-3">
                             <label for="timeRange">Time Range</label>
                             <select class="form-select" id="timeRange" name="time_range">
@@ -38,7 +38,7 @@
                                 <option value="custom">Custom Range</option>
                             </select>
                         </div>
-                        
+
                         <div class="custom-time-range d-none">
                             <div class="row">
                                 <div class="col-6">
@@ -55,7 +55,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="form-group mb-3">
                             <label for="speciesFilter">Species Filter</label>
                             <select class="form-select" id="speciesFilter" name="species_filter">
@@ -65,7 +65,7 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        
+
                         <div class="form-group mb-3">
                             <label for="locationFilter">Location Filter</label>
                             <select class="form-select" id="locationFilter" name="location_filter">
@@ -75,7 +75,7 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        
+
                         <div class="form-group mb-3">
                             <label>Report Sections</label>
                             <div class="form-check">
@@ -91,7 +91,7 @@
                                 <label class="form-check-label" for="includeTable">Include Data Table</label>
                             </div>
                         </div>
-                        
+
                         <div class="form-group mb-3">
                             <label for="outputFormat">Output Format</label>
                             <select class="form-select" id="outputFormat" name="output_format">
@@ -100,7 +100,7 @@
                                 <option value="excel">Excel</option>
                             </select>
                         </div>
-                        
+
                         <div class="form-actions">
                             <button type="button" id="generateReportBtn" class="btn btn-primary w-100">
                                 <i class="fas fa-file-pdf"></i> Generate Report
@@ -110,7 +110,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="report-preview">
             <div class="report-preview-card">
                 <div class="card-header">

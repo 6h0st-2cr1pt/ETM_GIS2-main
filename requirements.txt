@@ -14,5 +14,6 @@ django-import-export
 django-debug-toolbar
 djangorestframework
 
+SQLCipher
 openpyxl
 whitenoise

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     EndemicTree, MapLayer, UserSetting, TreeFamily, 
-    TreeGenus, TreeSpecies, Location, PinStyle
+    TreeGenus, TreeSpecies, Location, PinStyle, TreeSeed
 )
 
 @admin.register(TreeFamily)
@@ -37,6 +37,13 @@ class EndemicTreeAdmin(admin.ModelAdmin):
     list_display = ('species', 'location', 'population', 'year')
     list_filter = ('species__genus__family', 'species', 'year', 'location')
     search_fields = ('species__common_name', 'species__scientific_name', 'location__name')
+
+@admin.register(TreeSeed)
+class TreeSeedAdmin(admin.ModelAdmin):
+    list_display = ('species', 'location', 'quantity', 'planting_date', 'germination_status', 'survival_rate')
+    list_filter = ('species__genus__family', 'species', 'planting_date', 'germination_status', 'location')
+    search_fields = ('species__common_name', 'species__scientific_name', 'location__name')
+    date_hierarchy = 'planting_date'
 
 @admin.register(MapLayer)
 class MapLayerAdmin(admin.ModelAdmin):

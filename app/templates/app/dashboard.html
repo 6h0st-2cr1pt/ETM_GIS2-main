@@ -7,7 +7,7 @@
 {% block content %}
 <div class="dashboard-container">
     <h1 class="page-title">Dashboard</h1>
-    
+
     <div class="dashboard-stats">
         <div class="stat-card">
             <div class="stat-icon" style="background: linear-gradient(135deg, rgba(0, 184, 148, 0.9), rgba(0, 206, 201, 0.7)); color: white; border-radius: 8px; padding: 10px; box-shadow: 0 4px 10px rgba(0, 184, 148, 0.3);">
@@ -18,7 +18,7 @@
                 <p>Total Tree Records</p>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon" style="background: linear-gradient(135deg, rgba(0, 184, 148, 0.9), rgba(0, 206, 201, 0.7)); color: white; border-radius: 8px; padding: 10px; box-shadow: 0 4px 10px rgba(0, 184, 148, 0.3);">
                 <i class="fas fa-leaf"></i>
@@ -28,7 +28,7 @@
                 <p>Unique Species</p>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon" style="background: linear-gradient(135deg, rgba(0, 184, 148, 0.9), rgba(0, 206, 201, 0.7)); color: white; border-radius: 8px; padding: 10px; box-shadow: 0 4px 10px rgba(0, 184, 148, 0.3);">
                 <i class="fas fa-seedling"></i>
@@ -38,7 +38,7 @@
                 <p>Total Population</p>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon" style="background: linear-gradient(135deg, rgba(46, 134, 222, 0.9), rgba(83, 82, 237, 0.7)); color: white; border-radius: 8px; padding: 10px; box-shadow: 0 4px 10px rgba(46, 134, 222, 0.3);">
                 <i class="fas fa-heartbeat"></i>
@@ -49,24 +49,24 @@
             </div>
         </div>
     </div>
-    
+
     <div class="dashboard-charts-container">
         <div class="dashboard-chart">
             <h3>Population by Year</h3>
             <canvas id="populationChart"></canvas>
         </div>
-        
+
         <div class="dashboard-chart">
             <h3>Species Distribution</h3>
             <canvas id="speciesChart"></canvas>
         </div>
-        
+
         <div class="dashboard-chart">
             <h3>Health Status Distribution</h3>
             <canvas id="healthChart"></canvas>
         </div>
     </div>
-    
+
     <div class="dashboard-table-container">
         <h3>Recent Records</h3>
         <div class="table-responsive">
@@ -120,7 +120,7 @@
 {% block extra_js %}
 <script>
     // Pass health data to JavaScript
-    const healthData = JSON.parse('{{ health_data|safe }}');
+    const healthData = {{ health_data|safe }};
 </script>
 <script src="/static/js/dashboard.js"></script>
 {% endblock %}

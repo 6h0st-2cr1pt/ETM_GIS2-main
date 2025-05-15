@@ -23,7 +23,7 @@ from django.contrib.auth.decorators import login_required
 
 from .models import (
     EndemicTree, MapLayer, UserSetting, TreeFamily,
-    TreeGenus, TreeSpecies, Location, PinStyle
+    TreeGenus, TreeSpecies, Location, PinStyle, TreeSeed
 )
 from .forms import (
     EndemicTreeForm, CSVUploadForm, ThemeSettingsForm,
@@ -460,6 +460,71 @@ def upload_data(request):
             except Exception as e:
                 messages.error(request, f"Error adding record: {str(e)}")
                 print(f"Error in manual entry: {str(e)}")
+        elif 'submit_seed' in request.POST:
+            try:
+                # Get form data
+                common_name = request.POST.get('seed_common_name')
+                scientific_name = request.POST.get('seed_scientific_name')
+                family_name = request.POST.get('seed_family')
+                genus_name = request.POST.get('seed_genus')
+                quantity = int(request.POST.get('seed_quantity'))
+                planting_date = request.POST.get('seed_planting_date')
+                germination_status = request.POST.get('seed_germination_status')
+                germination_date = request.POST.get('seed_germination_date') or None
+                survival_rate = request.POST.get('seed_survival_rate')
+                if survival_rate:
+                    survival_rate = float(survival_rate)
+                else:
+                    survival_rate = None
+                expected_maturity_date = request.POST.get('seed_expected_maturity_date') or None
+                latitude = float(request.POST.get('seed_latitude'))
+                longitude = float(request.POST.get('seed_longitude'))
+                notes = request.POST.get('seed_notes', '')
+
+                # Get or create family
+                family, created = TreeFamily.objects.get_or_create(name=family_name)
+
+                # Get or create genus
+                genus, created = TreeGenus.objects.get_or_create(
+                    name=genus_name,
+                    defaults={'family': family}
+                )
+
+                # Get or create species
+                species, created = TreeSpecies.objects.get_or_create(
+                    scientific_name=scientific_name,
+                    defaults={
+                        'common_name': common_name,
+                        'genus': genus
+                    }
+                )
+
+                # Get or create location
+                location, created = Location.objects.get_or_create(
+                    latitude=latitude,
+                    longitude=longitude,
+                    defaults={'name': f"{common_name} Seed Planting Location"}
+                )
+
+                # Create tree seed record
+                seed = TreeSeed.objects.create(
+                    species=species,
+                    location=location,
+                    quantity=quantity,
+                    planting_date=planting_date,
+                    germination_status=germination_status,
+                    germination_date=germination_date,
+                    survival_rate=survival_rate,
+                    expected_maturity_date=expected_maturity_date,
+                    notes=notes
+                )
+
+                messages.success(request, f"Successfully added {common_name} seed planting record.")
+                # Redirect to GIS page to see the newly added data
+                return redirect('app:gis')
+            except Exception as e:
+                messages.error(request, f"Error adding seed record: {str(e)}")
+                print(f"Error in seed entry: {str(e)}")
 
     # Get all families and genera for the form
     families = TreeFamily.objects.all()
@@ -659,6 +724,59 @@ def tree_data(request):
         return JsonResponse(geojson)
     except Exception as e:
         print(f"Error in tree_data API: {str(e)}")
+        return JsonResponse({
+            'type': 'FeatureCollection',
+            'features': [],
+            'error': str(e)
+        }, status=500)
+
+
+def seed_data(request):
+    """
+    API endpoint for seed data in GeoJSON format
+    """
+    try:
+        seeds = TreeSeed.objects.select_related('species', 'location').all()
+
+        # Log the count of seeds for debugging
+        seed_count = seeds.count()
+        print(f"Found {seed_count} seed plantings in the database")
+
+        # Convert to GeoJSON format
+        features = []
+        for seed in seeds:
+            feature = {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [seed.location.longitude, seed.location.latitude]
+                },
+                'properties': {
+                    'id': str(seed.id),
+                    'species_id': str(seed.species.id),
+                    'common_name': seed.species.common_name,
+                    'scientific_name': seed.species.scientific_name,
+                    'family': seed.species.genus.family.name,
+                    'genus': seed.species.genus.name,
+                    'quantity': seed.quantity,
+                    'planting_date': seed.planting_date.strftime('%Y-%m-%d'),
+                    'germination_status': seed.germination_status,
+                    'survival_rate': seed.survival_rate if seed.survival_rate is not None else 'N/A',
+                    'location': seed.location.name,
+                    'notes': seed.notes or '',
+                    'entity_type': 'seed'  # To distinguish from mature trees
+                }
+            }
+            features.append(feature)
+
+        geojson = {
+            'type': 'FeatureCollection',
+            'features': features
+        }
+
+        return JsonResponse(geojson)
+    except Exception as e:
+        print(f"Error in seed_data API: {str(e)}")
         return JsonResponse({
             'type': 'FeatureCollection',
             'features': [],
