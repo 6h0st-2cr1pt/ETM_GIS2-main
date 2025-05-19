@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block content %}
+{% csrf_token %}
 <div class="datasets-container">
     <h1 class="page-title">Datasets</h1>
     
@@ -132,29 +133,97 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Common Name:</strong> <span id="modal-common-name"></span></p>
-                            <p><strong>Scientific Name:</strong> <span id="modal-scientific-name"></span></p>
-                            <p><strong>Family:</strong> <span id="modal-family"></span></p>
-                            <p><strong>Genus:</strong> <span id="modal-genus"></span></p>
-                            <p><strong>Population:</strong> <span id="modal-population"></span></p>
-                            <p><strong>Health Status:</strong> <span id="modal-health-status"></span></p>
+                            <p><strong>Common Name:</strong> <span id="view-common-name"></span></p>
+                            <p><strong>Scientific Name:</strong> <span id="view-scientific-name"></span></p>
+                            <p><strong>Family:</strong> <span id="view-family"></span></p>
+                            <p><strong>Genus:</strong> <span id="view-genus"></span></p>
+                            <p><strong>Population:</strong> <span id="view-population"></span></p>
+                            <p><strong>Health Status:</strong> <span id="view-health-status"></span></p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Year:</strong> <span id="modal-year"></span></p>
-                            <p><strong>Latitude:</strong> <span id="modal-latitude"></span></p>
-                            <p><strong>Longitude:</strong> <span id="modal-longitude"></span></p>
+                            <p><strong>Year:</strong> <span id="view-year"></span></p>
+                            <p><strong>Latitude:</strong> <span id="view-latitude"></span></p>
+                            <p><strong>Longitude:</strong> <span id="view-longitude"></span></p>
                             <p><strong>Notes:</strong></p>
-                            <div id="modal-notes" class="p-2 border rounded bg-light"></div>
+                            <div id="view-notes" class="p-2 border rounded bg-light"></div>
                         </div>
                     </div>
                     <div class="row mt-3">
                         <div class="col-12">
-                            <div id="modal-map" style="height: 300px;"></div>
+                            <div id="view-map" style="height: 300px;"></div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Tree Modal -->
+    <div class="modal fade" id="editTreeModal" tabindex="-1" aria-labelledby="editTreeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTreeModalLabel">Edit Tree Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editTreeForm">
+                        {% csrf_token %}
+                        <input type="hidden" id="edit-tree-id" name="tree_id">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit-species" class="form-label">Species</label>
+                                    <select class="form-control" id="edit-species" name="species" required>
+                                        {% for species in species_list %}
+                                        <option value="{{ species.id }}">{{ species.common_name }} ({{ species.scientific_name }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit-population" class="form-label">Population</label>
+                                    <input type="number" class="form-control" id="edit-population" name="population" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit-year" class="form-label">Year</label>
+                                    <input type="number" class="form-control" id="edit-year" name="year" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit-health-status" class="form-label">Health Status</label>
+                                    <select class="form-control" id="edit-health-status" name="health_status" required>
+                                        <option value="excellent">Excellent</option>
+                                        <option value="very_good">Very Good</option>
+                                        <option value="good">Good</option>
+                                        <option value="poor">Poor</option>
+                                        <option value="very_poor">Very Poor</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit-latitude" class="form-label">Latitude</label>
+                                    <input type="number" step="any" class="form-control" id="edit-latitude" name="latitude" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit-longitude" class="form-label">Longitude</label>
+                                    <input type="number" step="any" class="form-control" id="edit-longitude" name="longitude" required>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="edit-notes" class="form-label">Notes</label>
+                                    <textarea class="form-control" id="edit-notes" name="notes" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveTreeChanges">Save Changes</button>
                 </div>
             </div>
         </div>

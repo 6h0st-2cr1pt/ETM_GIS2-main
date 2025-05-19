@@ -29,4 +29,7 @@ urlpatterns = [
     path('api/set-map-style/', views.set_map_style, name='set_map_style'),
     path('api/set-pin-style/', views.set_pin_style, name='set_pin_style'),
     path('api/save-setting/', views.save_setting, name='save_setting'),
+    path('generate-report/', views.generate_report, name='generate_report'),
+    path('edit-tree/<uuid:tree_id>/', views.edit_tree, name='edit_tree'),
+    path('delete-tree/<uuid:tree_id>/', views.delete_tree, name='delete_tree'),
 ]

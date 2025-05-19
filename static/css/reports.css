@@ -1,13 +1,15 @@
 /* Reports Styles */
 .reports-container {
-  padding: 1rem 0;
+  padding: 2rem;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .reports-content {
   display: grid;
   grid-template-columns: 350px 1fr;
-  gap: 1.5rem;
-  height: calc(100vh - 10rem);
+  gap: 2rem;
+  margin-top: 2rem;
 }
 
 .reports-sidebar {
@@ -22,7 +24,7 @@
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--card-border-radius);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -30,23 +32,108 @@
 
 .card-header {
   padding: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--glass-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .card-header h2 {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  margin: 0;
   color: var(--text-primary);
+  margin: 0;
 }
 
 .card-body {
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Select Dropdown Styles */
+.form-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-content);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-sm);
+  appearance: none;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Light theme select dropdown arrow */
+html[data-theme="light"] .form-select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+.form-select:focus {
+  border-color: var(--color-primary);
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+}
+
+/* Form Control Styles */
+.form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-content);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-sm);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+  border-color: var(--color-primary);
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+}
+
+/* Checkbox Styles */
+.form-check {
+  margin-bottom: 0.5rem;
+}
+
+.form-check-input {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.25rem;
+  margin-right: 0.5rem;
+  background-color: var(--bg-content);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.25rem;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.form-check-input:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.form-check-label {
+  color: var(--text-primary);
 }
 
 /* Report Preview */
@@ -56,7 +143,8 @@
 
 .preview-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 #reportPreviewContent {
@@ -70,17 +158,17 @@
 }
 
 .no-report-message {
-  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #aaa;
-  padding: 2rem;
+  padding: 3rem;
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .no-report-message i {
-  font-size: 4rem;
+  font-size: 3rem;
   margin-bottom: 1rem;
 }
 
@@ -163,11 +251,45 @@ html[data-theme="light"] .report-preview-card {
   border-color: rgba(0, 0, 0, 0.1);
 }
 
+/* Button Styles */
+.btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary), #2e59d9);
+  border: none;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2e59d9, var(--color-primary));
+  transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  background: transparent;
+}
+
+.btn-outline-primary:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
 /* Responsive adjustments */
 @media (max-width: 992px) {
   .reports-content {
     grid-template-columns: 1fr;
-    height: auto;
+  }
+
+  .reports-container {
+    padding: 1rem;
   }
 
   .reports-sidebar,
@@ -182,5 +304,16 @@ html[data-theme="light"] .report-preview-card {
 
   #reportPreviewContent {
     max-height: 600px;
+  }
+}
+
+@media (max-width: 576px) {
+  .reports-container {
+    padding: 0.75rem;
+  }
+
+  .card-header,
+  .card-body {
+    padding: 1rem;
   }
 }

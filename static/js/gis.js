@@ -130,10 +130,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentBaseLayer = "dark"
   baseLayers[currentBaseLayer].addTo(map)
 
-  // Create a layer group for tree markers
+  // Create layer groups for tree and seed markers
   const treeLayer = L.layerGroup().addTo(map)
-
-  // Create a layer group for seed markers
   const seedLayer = L.layerGroup().addTo(map)
 
   // Create layer groups for additional layers - Fix for issue #12
@@ -231,8 +229,43 @@ document.addEventListener("DOMContentLoaded", () => {
   let colorIndex = 0
 
   // Load all trees and seeds by default
-  loadTrees()
-  loadSeeds()
+  Promise.all([loadTrees(), loadSeeds()])
+    .then(() => {
+      console.log("Initial data load complete")
+    })
+    .catch((error) => {
+      console.error("Error loading initial data:", error)
+    })
+
+  // Add a refresh button to manually reload tree data
+  const refreshButton = document.createElement("button")
+  refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Data'
+  refreshButton.className = "refresh-button"
+  refreshButton.style.position = "absolute"
+  refreshButton.style.top = "10px"
+  refreshButton.style.right = "10px"
+  refreshButton.style.zIndex = "1000"
+  refreshButton.style.padding = "8px 12px"
+  refreshButton.style.backgroundColor = "#4caf50"
+  refreshButton.style.color = "white"
+  refreshButton.style.border = "none"
+  refreshButton.style.borderRadius = "4px"
+  refreshButton.style.cursor = "pointer"
+
+  refreshButton.addEventListener("click", () => {
+    Promise.all([loadTrees(), loadSeeds()])
+      .then(() => {
+        // Hide the filtered data container when refreshing all data
+        filteredDataContainer.style.display = "none"
+        alert("Tree and seed data refreshed!")
+      })
+      .catch((error) => {
+        console.error("Error refreshing data:", error)
+        alert("Error refreshing data. Please check the console for details.")
+      })
+  })
+
+  document.querySelector(".gis-container").appendChild(refreshButton)
 
   // Map type control change event
   document.querySelectorAll('input[name="mapType"]').forEach((radio) => {
@@ -427,7 +460,12 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .then((data) => {
         console.log("Seed data received:", data)
-        addSeedsToMap(data)
+        if (data.features && data.features.length > 0) {
+          addSeedsToMap(data)
+          console.log(`Added ${data.features.length} seed markers to the map`)
+        } else {
+          console.log("No seed data found")
+        }
       })
       .catch((error) => {
         console.error("Error loading seeds:", error)
@@ -759,7 +797,15 @@ document.addEventListener("DOMContentLoaded", () => {
               <tr><td>Family:</td><td>${properties.family}</td></tr>
               <tr><td>Genus:</td><td>${properties.genus}</td></tr>
               <tr><td>Population:</td><td>${properties.population}</td></tr>
-              <tr><td>Health:</td><td>${properties.health_status.replace(/_/g, " ")}</td></tr>
+              <tr><td>Health Status:</td><td>${properties.health_status.replace(/_/g, " ")}</td></tr>
+              <tr><td>Health Distribution:</td><td>
+                <div class="health-distribution">
+                  <div class="health-count">Healthy: ${properties.healthy_count || 0}</div>
+                  <div class="health-count">Good: ${properties.good_count || 0}</div>
+                  <div class="health-count">Bad: ${properties.bad_count || 0}</div>
+                  <div class="health-count">Deceased: ${properties.deceased_count || 0}</div>
+                </div>
+              </td></tr>
               <tr><td>Year:</td><td>${properties.year}</td></tr>
               <tr><td>Location:</td><td>${properties.location}</td></tr>
             </table>
@@ -810,31 +856,6 @@ document.addEventListener("DOMContentLoaded", () => {
       additionalLayers.heatmap.addLayer(heat)
     }
   }
-
-  // Add a refresh button to manually reload tree data
-  const refreshButton = document.createElement("button")
-  refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Data'
-  refreshButton.className = "refresh-button"
-  refreshButton.style.position = "absolute"
-  refreshButton.style.top = "10px"
-  refreshButton.style.right = "10px"
-  refreshButton.style.zIndex = "1000"
-  refreshButton.style.padding = "8px 12px"
-  refreshButton.style.backgroundColor = "#4caf50"
-  refreshButton.style.color = "white"
-  refreshButton.style.border = "none"
-  refreshButton.style.borderRadius = "4px"
-  refreshButton.style.cursor = "pointer"
-
-  refreshButton.addEventListener("click", () => {
-    loadTrees()
-    loadSeeds()
-    // Hide the filtered data container when refreshing all data
-    filteredDataContainer.style.display = "none"
-    alert("Tree and seed data refreshed!")
-  })
-
-  document.querySelector(".gis-container").appendChild(refreshButton)
 
   // Create a legend for tree species
   const legend = L.control({ position: "bottomleft" })
@@ -913,3 +934,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })
 })
+

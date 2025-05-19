@@ -1,34 +1,46 @@
-import { Chart } from "@/components/ui/chart"
 document.addEventListener("DOMContentLoaded", () => {
-  // Mock data for healthStatusData and healthByYearData
-  const healthStatusData = [
-    { health_status: "very_poor", count: 10 },
-    { health_status: "poor", count: 20 },
-    { health_status: "good", count: 30 },
-    { health_status: "very_good", count: 25 },
-    { health_status: "excellent", count: 15 },
-  ]
-
-  const healthByYearData = [
-    { year: 2020, health_status: "very_poor", count: 2 },
-    { year: 2020, health_status: "poor", count: 4 },
-    { year: 2020, health_status: "good", count: 6 },
-    { year: 2021, health_status: "very_poor", count: 3 },
-    { year: 2021, health_status: "poor", count: 5 },
-    { year: 2021, health_status: "good", count: 7 },
-  ]
+  // Define health status categories and colors
+  const healthCategories = {
+    very_poor: {
+      label: "Very Poor",
+      color: "rgba(231, 76, 60, 0.7)",
+      borderColor: "rgba(231, 76, 60, 1)"
+    },
+    poor: {
+      label: "Poor",
+      color: "rgba(241, 196, 15, 0.7)",
+      borderColor: "rgba(241, 196, 15, 1)"
+    },
+    good: {
+      label: "Good",
+      color: "rgba(46, 204, 113, 0.7)",
+      borderColor: "rgba(46, 204, 113, 1)"
+    },
+    very_good: {
+      label: "Very Good",
+      color: "rgba(52, 152, 219, 0.7)",
+      borderColor: "rgba(52, 152, 219, 1)"
+    },
+    excellent: {
+      label: "Excellent",
+      color: "rgba(155, 89, 182, 0.7)",
+      borderColor: "rgba(155, 89, 182, 1)"
+    }
+  }
 
   // Population Time Chart
-  const populationTimeChartCtx = document.getElementById("populationTimeChart").getContext("2d")
-  const populationData = JSON.parse(document.getElementById("populationTimeChart").getAttribute("data-population"))
-
-  new Chart(populationTimeChartCtx, {
+  const populationTimeChartCtx = document.getElementById("populationTimeChart")
+  if (populationTimeChartCtx) {
+    try {
+      const populationData = JSON.parse(populationTimeChartCtx.getAttribute("data-population") || "[]")
+      if (populationData && populationData.length > 0) {
+        new Chart(populationTimeChartCtx.getContext("2d"), {
     type: "line",
     data: {
       labels: populationData.map((item) => item.year),
       datasets: [
         {
-          label: "Population",
+                label: "Total Population",
           data: populationData.map((item) => item.total),
           backgroundColor: "rgba(0, 184, 148, 0.2)",
           borderColor: "rgba(0, 184, 148, 1)",
@@ -63,62 +75,82 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     },
   })
+      } else {
+        populationTimeChartCtx.style.display = "none"
+        populationTimeChartCtx.nextElementSibling.style.display = "block"
+      }
+    } catch (error) {
+      console.error("Error creating Population Time Chart:", error)
+      populationTimeChartCtx.style.display = "none"
+      populationTimeChartCtx.nextElementSibling.style.display = "block"
+    }
+  }
 
-  // Species Count Chart
-  const speciesCountChartCtx = document.getElementById("speciesCountChart").getContext("2d")
-  const speciesData = JSON.parse(document.getElementById("speciesCountChart").getAttribute("data-species"))
+  // Health Distribution Chart
+  const healthDistributionChartCtx = document.getElementById("healthDistributionChart")
+  if (healthDistributionChartCtx) {
+    try {
+      const healthData = JSON.parse(healthDistributionChartCtx.getAttribute("data-health") || "[]")
+      if (healthData && healthData.length > 0) {
+        const healthChartData = {
+          labels: healthData.map(item => healthCategories[item.health_status]?.label || item.health_status),
+          datasets: [{
+            data: healthData.map(item => item.count),
+            backgroundColor: healthData.map(item => healthCategories[item.health_status]?.color || "rgba(0, 0, 0, 0.7)"),
+            borderColor: healthData.map(item => healthCategories[item.health_status]?.borderColor || "rgba(0, 0, 0, 1)"),
+            borderWidth: 1
+          }]
+        }
 
-  new Chart(speciesCountChartCtx, {
-    type: "bar",
-    data: {
-      labels: speciesData.map((item) => item.species),
-      datasets: [
-        {
-          label: "Count",
-          data: speciesData.map((item) => item.count),
-          backgroundColor: "rgba(9, 132, 227, 0.7)",
-          borderColor: "rgba(9, 132, 227, 1)",
-          borderWidth: 1,
-        },
-      ],
-    },
+        new Chart(healthDistributionChartCtx.getContext("2d"), {
+          type: "pie",
+          data: healthChartData,
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: "rgba(255, 255, 255, 0.1)",
-          },
-        },
-        x: {
-          grid: {
-            color: "rgba(255, 255, 255, 0.1)",
-          },
-        },
-      },
       plugins: {
         legend: {
+                position: "right",
           labels: {
             color: "rgba(255, 255, 255, 0.7)",
           },
         },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                    const percentage = ((context.raw / total) * 100).toFixed(1)
+                    return `${context.label}: ${context.raw} (${percentage}%)`
+                  }
+                }
+              }
       },
     },
   })
+      } else {
+        healthDistributionChartCtx.style.display = "none"
+        healthDistributionChartCtx.nextElementSibling.style.display = "block"
+      }
+    } catch (error) {
+      console.error("Error creating Health Distribution Chart:", error)
+      healthDistributionChartCtx.style.display = "none"
+      healthDistributionChartCtx.nextElementSibling.style.display = "block"
+    }
+  }
 
   // Family Distribution Chart
-  const familyDistributionChartCtx = document.getElementById("familyDistributionChart").getContext("2d")
-  const familyData = JSON.parse(document.getElementById("familyDistributionChart").getAttribute("data-family"))
-
-  new Chart(familyDistributionChartCtx, {
+  const familyDistributionChartCtx = document.getElementById("familyDistributionChart")
+  if (familyDistributionChartCtx) {
+    try {
+      const familyData = JSON.parse(familyDistributionChartCtx.getAttribute("data-family") || "[]")
+      if (familyData && familyData.length > 0) {
+        new Chart(familyDistributionChartCtx.getContext("2d"), {
     type: "doughnut",
     data: {
       labels: familyData.map((item) => item.name),
       datasets: [
         {
-          data: familyData.map((item) => item.total),
+                data: familyData.map((item) => item.total_population),
           backgroundColor: [
             "rgba(0, 184, 148, 0.7)",
             "rgba(0, 206, 201, 0.7)",
@@ -146,182 +178,248 @@ document.addEventListener("DOMContentLoaded", () => {
             color: "rgba(255, 255, 255, 0.7)",
           },
         },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                    const percentage = ((context.raw / total) * 100).toFixed(1)
+                    return `${context.label}: ${context.raw} (${percentage}%)`
+            }
+          }
+        }
       },
     },
   })
-
-  // Health Status Distribution Chart
-  const healthDistributionChartCtx = document.getElementById("healthDistributionChart").getContext("2d")
-
-  // Map health status codes to readable labels
-  const healthLabels = {
-    very_poor: "Very Poor",
-    poor: "Poor",
-    good: "Good",
-    very_good: "Very Good",
-    excellent: "Excellent",
+      } else {
+        familyDistributionChartCtx.style.display = "none"
+        familyDistributionChartCtx.nextElementSibling.style.display = "block"
+      }
+    } catch (error) {
+      console.error("Error creating Family Distribution Chart:", error)
+      familyDistributionChartCtx.style.display = "none"
+      familyDistributionChartCtx.nextElementSibling.style.display = "block"
+    }
   }
 
-  // Map health status to colors
-  const healthColors = {
-    very_poor: "rgba(231, 76, 60, 0.7)",
-    poor: "rgba(241, 196, 15, 0.7)",
-    good: "rgba(46, 204, 113, 0.7)",
-    very_good: "rgba(52, 152, 219, 0.7)",
-    excellent: "rgba(155, 89, 182, 0.7)",
-  }
-
-  // Process health data
-  const healthLabelsArray = healthStatusData.map((item) => healthLabels[item.health_status] || item.health_status)
-  const healthCountsArray = healthStatusData.map((item) => item.count)
-  const healthColorsArray = healthStatusData.map((item) => healthColors[item.health_status] || "rgba(0, 0, 0, 0.7)")
-
-  new Chart(healthDistributionChartCtx, {
-    type: "pie",
+  // Genus Distribution Chart
+  const genusDistributionChartCtx = document.getElementById("genusDistributionChart")
+  if (genusDistributionChartCtx) {
+    try {
+      const genusData = JSON.parse(genusDistributionChartCtx.getAttribute("data-genus") || "[]")
+      if (genusData && genusData.length > 0) {
+        new Chart(genusDistributionChartCtx.getContext("2d"), {
+    type: "bar",
     data: {
-      labels: healthLabelsArray,
+            labels: genusData.map((item) => `${item.name} (${item.family__name})`),
       datasets: [
         {
-          data: healthCountsArray,
-          backgroundColor: healthColorsArray,
-          borderColor: "rgba(255, 255, 255, 0.2)",
+                label: "Population",
+                data: genusData.map((item) => item.total_population),
+                backgroundColor: "rgba(46, 204, 113, 0.7)",
+                borderColor: "rgba(46, 204, 113, 1)",
           borderWidth: 1,
         },
+              {
+                label: "Species Count",
+                data: genusData.map((item) => item.species_count),
+                backgroundColor: "rgba(52, 152, 219, 0.7)",
+                borderColor: "rgba(52, 152, 219, 1)",
+                borderWidth: 1,
+              }
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: "rgba(255, 255, 255, 0.1)",
+          },
+        },
+        x: {
+          grid: {
+            color: "rgba(255, 255, 255, 0.1)",
+          },
+        },
+      },
       plugins: {
         legend: {
-          position: "right",
-          labels: {
-            color: "rgba(255, 255, 255, 0.7)",
-          },
+                labels: {
+                  color: "rgba(255, 255, 255, 0.7)",
+                },
         },
       },
     },
   })
+      } else {
+        genusDistributionChartCtx.style.display = "none"
+        genusDistributionChartCtx.nextElementSibling.style.display = "block"
+      }
+    } catch (error) {
+      console.error("Error creating Genus Distribution Chart:", error)
+      genusDistributionChartCtx.style.display = "none"
+      genusDistributionChartCtx.nextElementSibling.style.display = "block"
+    }
+  }
+
+  // Species Population Chart
+  const speciesPopulationChartCtx = document.getElementById("speciesPopulationChart")
+  if (speciesPopulationChartCtx) {
+    try {
+      const speciesData = JSON.parse(speciesPopulationChartCtx.getAttribute("data-species") || "[]")
+      if (speciesData && speciesData.length > 0) {
+        new Chart(speciesPopulationChartCtx.getContext("2d"), {
+          type: "horizontalBar",
+          data: {
+            labels: speciesData.map((item) => `${item.common_name} (${item.scientific_name})`),
+            datasets: [
+              {
+                label: "Population",
+                data: speciesData.map((item) => item.total_population),
+                backgroundColor: "rgba(46, 204, 113, 0.7)",
+                borderColor: "rgba(46, 204, 113, 1)",
+                borderWidth: 1,
+              }
+            ],
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                beginAtZero: true,
+                grid: {
+                  color: "rgba(255, 255, 255, 0.1)",
+                },
+              },
+              y: {
+                grid: {
+                  color: "rgba(255, 255, 255, 0.1)",
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: "rgba(255, 255, 255, 0.7)",
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const item = speciesData[context.dataIndex]
+                    return [
+                      `Population: ${item.total_population}`,
+                      `Locations: ${item.locations_count}`
+                    ]
+                  }
+                }
+              }
+            },
+          },
+        })
+      } else {
+        speciesPopulationChartCtx.style.display = "none"
+        speciesPopulationChartCtx.nextElementSibling.style.display = "block"
+      }
+    } catch (error) {
+      console.error("Error creating Species Population Chart:", error)
+      speciesPopulationChartCtx.style.display = "none"
+      speciesPopulationChartCtx.nextElementSibling.style.display = "block"
+    }
+  }
 
   // Health Status by Year Chart
-  const healthByYearChartCtx = document.getElementById("healthByYearChart").getContext("2d")
+  const healthByYearChartCtx = document.getElementById("healthByYearChart")
+  if (healthByYearChartCtx) {
+    try {
+      const healthYearData = JSON.parse(healthByYearChartCtx.getAttribute("data-health-year") || "[]")
+      if (healthYearData && healthYearData.length > 0) {
+        // Get unique years and health statuses
+        const years = [...new Set(healthYearData.map(item => item.year))]
+        const statuses = [...new Set(healthYearData.map(item => item.health_status))]
 
-  // Process health by year data
-  const years = [...new Set(healthByYearData.map((item) => item.year))].sort()
-  const healthStatuses = [...new Set(healthByYearData.map((item) => item.health_status))]
-
-  const healthByYearDatasets = healthStatuses.map((status) => {
-    const statusData = years.map((year) => {
-      const match = healthByYearData.find((item) => item.year === year && item.health_status === status)
-      return match ? match.count : 0
-    })
-
-    return {
-      label: healthLabels[status] || status,
-      data: statusData,
-      backgroundColor: healthColors[status] || "rgba(0, 0, 0, 0.7)",
-      borderColor: healthColors[status] || "rgba(0, 0, 0, 0.7)",
-      borderWidth: 1,
-    }
-  })
-
-  new Chart(healthByYearChartCtx, {
-    type: "bar",
-    data: {
-      labels: years,
-      datasets: healthByYearDatasets,
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          stacked: true,
-          grid: {
-            color: "rgba(255, 255, 255, 0.1)",
-          },
-        },
-        x: {
-          stacked: true,
-          grid: {
-            color: "rgba(255, 255, 255, 0.1)",
-          },
-        },
-      },
-      plugins: {
-        legend: {
-          position: "top",
-          labels: {
-            color: "rgba(255, 255, 255, 0.7)",
-          },
-        },
-      },
-    },
-  })
-
-  // Conservation Status Chart
-  const conservationStatusChartCtx = document.getElementById("conservationStatusChart").getContext("2d")
-  const conservationData = JSON.parse(
-    document.getElementById("conservationStatusChart").getAttribute("data-conservation"),
-  )
-
-  new Chart(conservationStatusChartCtx, {
-    type: "bar",
-    data: {
-      labels: conservationData.map((item) => item.status),
-      datasets: [
-        {
-          label: "Count",
-          data: conservationData.map((item) => item.count),
-          backgroundColor: [
-            "rgba(46, 204, 113, 0.7)",
-            "rgba(241, 196, 15, 0.7)",
-            "rgba(230, 126, 34, 0.7)",
-            "rgba(231, 76, 60, 0.7)",
-            "rgba(192, 57, 43, 0.7)",
-          ],
-          borderColor: "rgba(255, 255, 255, 0.2)",
+        // Create datasets for each health status
+        const datasets = statuses.map(status => ({
+          label: healthCategories[status]?.label || status,
+          data: years.map(year => {
+            const entry = healthYearData.find(item => item.year === year && item.health_status === status)
+            return entry ? entry.population : 0
+          }),
+          backgroundColor: healthCategories[status]?.color || "rgba(0, 0, 0, 0.7)",
+          borderColor: healthCategories[status]?.borderColor || "rgba(0, 0, 0, 1)",
           borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: "rgba(255, 255, 255, 0.1)",
+          stack: 'Stack 0',
+        }))
+
+        new Chart(healthByYearChartCtx.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: years,
+            datasets: datasets
           },
-        },
-        x: {
-          grid: {
-            color: "rgba(255, 255, 255, 0.1)",
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                stacked: true,
+                grid: {
+                  color: "rgba(255, 255, 255, 0.1)",
+                },
+              },
+              y: {
+                stacked: true,
+                grid: {
+                  color: "rgba(255, 255, 255, 0.1)",
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  color: "rgba(255, 255, 255, 0.7)",
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return `${context.dataset.label}: ${context.raw}`
+                  }
+                }
+              }
+            },
           },
-        },
-      },
-      plugins: {
-        legend: {
-          display: false,
-        },
-      },
-    },
-  })
+        })
+      } else {
+        healthByYearChartCtx.style.display = "none"
+        healthByYearChartCtx.nextElementSibling.style.display = "block"
+      }
+    } catch (error) {
+      console.error("Error creating Health by Year Chart:", error)
+      healthByYearChartCtx.style.display = "none"
+      healthByYearChartCtx.nextElementSibling.style.display = "block"
+    }
+  }
 
   // Growth Rate Chart
-  const growthRateChartCtx = document.getElementById("growthRateChart").getContext("2d")
-  const growthRateData = JSON.parse(document.getElementById("growthRateChart").getAttribute("data-growth"))
-
-  new Chart(growthRateChartCtx, {
+  const growthRateChartCtx = document.getElementById("growthRateChart")
+  if (growthRateChartCtx) {
+    try {
+      const growthData = JSON.parse(growthRateChartCtx.getAttribute("data-growth") || "[]")
+      if (growthData && growthData.length > 0) {
+        new Chart(growthRateChartCtx.getContext("2d"), {
     type: "line",
     data: {
-      labels: growthRateData.map((item) => item.year),
+            labels: growthData.map((item) => item.year),
       datasets: [
         {
-          label: "Growth Rate (%)",
-          data: growthRateData.map((item) => item.growth_rate),
+                label: "Annual Growth Rate (%)",
+                data: growthData.map((item) => item.growth_rate),
           backgroundColor: "rgba(52, 152, 219, 0.2)",
           borderColor: "rgba(52, 152, 219, 1)",
           borderWidth: 2,
@@ -354,59 +452,58 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     },
   })
-
-  // Initialize mini map
-  const distributionMap = L.map("distributionMap").setView([10.4234, 123.1234], 7)
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  }).addTo(distributionMap)
-
-  // Fetch tree data for map
-  fetch("/api/tree-data/")
-    .then((response) => response.json())
-    .then((data) => {
-      // Create a GeoJSON layer
-      L.geoJSON(data, {
-        pointToLayer: (feature, latlng) =>
-          L.circleMarker(latlng, {
-            radius: 5,
-            fillColor: getHealthColor(feature.properties.health_status),
-            color: "#000",
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.8,
-          }),
-        onEachFeature: (feature, layer) => {
-          layer.bindPopup(`
-                        <strong>${feature.properties.common_name}</strong><br>
-                        <em>${feature.properties.scientific_name}</em><br>
-                        Population: ${feature.properties.population}<br>
-                        Health: ${getHealthLabel(feature.properties.health_status)}
-                    `)
-        },
-      }).addTo(distributionMap)
-    })
-
-  function getHealthColor(status) {
-    const colors = {
-      very_poor: "#e74c3c",
-      poor: "#f1c40f",
-      good: "#2ecc71",
-      very_good: "#3498db",
-      excellent: "#9b59b6",
+      } else {
+        growthRateChartCtx.style.display = "none"
+        growthRateChartCtx.nextElementSibling.style.display = "block"
+      }
+    } catch (error) {
+      console.error("Error creating Growth Rate Chart:", error)
+      growthRateChartCtx.style.display = "none"
+      growthRateChartCtx.nextElementSibling.style.display = "block"
     }
-    return colors[status] || "#7f8c8d"
   }
 
-  function getHealthLabel(status) {
-    const labels = {
-      very_poor: "Very Poor",
-      poor: "Poor",
-      good: "Good",
-      very_good: "Very Good",
-      excellent: "Excellent",
+  // Initialize the distribution map if Leaflet is available
+  const distributionMapDiv = document.getElementById("distributionMap")
+  if (distributionMapDiv && window.L) {
+    try {
+      const locationData = JSON.parse(distributionMapDiv.getAttribute("data-locations") || "[]")
+      if (locationData && locationData.length > 0) {
+        const map = L.map(distributionMapDiv).setView([0, 0], 2)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map)
+
+        const bounds = []
+        locationData.forEach(location => {
+          if (location.latitude && location.longitude) {
+            L.circleMarker([location.latitude, location.longitude], {
+              radius: Math.min(Math.sqrt(location.total_trees) * 2, 20),
+              fillColor: "#2ecc71",
+              color: "#fff",
+            weight: 1,
+            opacity: 1,
+              fillOpacity: 0.7
+            })
+            .bindPopup(`
+              <strong>${location.name}</strong><br>
+              Total Trees: ${location.total_trees}<br>
+              Species Count: ${location.species_count}
+                    `)
+            .addTo(map)
+            bounds.push([location.latitude, location.longitude])
+          }
+        })
+
+        if (bounds.length > 0) {
+          map.fitBounds(bounds)
+        }
+      } else {
+        distributionMapDiv.innerHTML = '<div class="no-data-message">No location data available</div>'
+      }
+    } catch (error) {
+      console.error("Error creating Distribution Map:", error)
+      distributionMapDiv.innerHTML = '<div class="no-data-message">Error loading map</div>'
     }
-    return labels[status] || status
   }
 })

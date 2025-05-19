@@ -15,11 +15,13 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.core.serializers import serialize
-from django.db.models import Count, Sum, F, Q, Case, When, Value, IntegerField
+from django.db.models import Count, Sum, F, Q, Case, When, Value, IntegerField, Avg
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_protect
+from django.utils import timezone
 
 from .models import (
     EndemicTree, MapLayer, UserSetting, TreeFamily,
@@ -143,36 +145,33 @@ def dashboard(request):
     # Get basic stats for dashboard
     total_trees = EndemicTree.objects.count()
     unique_species = TreeSpecies.objects.count()
-    tree_population = EndemicTree.objects.aggregate(Sum('population'))['population__sum'] or 0
+    tree_population = EndemicTree.objects.aggregate(total_population=Sum('population'))['total_population'] or 0
 
     # Calculate health percentage (trees in good health or better)
-    good_health_count = EndemicTree.objects.filter(
+    total_population = tree_population or 1  # Avoid division by zero
+    good_health_population = EndemicTree.objects.filter(
         health_status__in=['good', 'very_good', 'excellent']
-    ).count()
+    ).aggregate(total=Sum('population'))['total'] or 0
 
-    health_percentage = 0
-    if total_trees > 0:
-        health_percentage = round((good_health_count / total_trees) * 100)
+    health_percentage = round((good_health_population / total_population) * 100)
 
     # Get health status distribution for chart
     health_data = list(EndemicTree.objects.values('health_status').annotate(
-        count=Count('id')
+        count=Sum('population')  # Changed from Count('id') to Sum('population')
     ).order_by('health_status'))
 
     # Get most recent data
     recent_trees = EndemicTree.objects.select_related('species', 'location').all().order_by('-created_at')[:5]
 
     # Get species by family for chart
-    species_by_family = TreeSpecies.objects.values(
-        'genus__family__name'
-    ).annotate(
-        count=Count('id')
-    ).order_by('-count')[:10]
+    species_by_family = list(TreeFamily.objects.annotate(
+        total_population=Sum('genera__species__trees__population')
+    ).values('name', 'total_population').order_by('-total_population')[:10])
 
-    # Get population by year
-    population_by_year = EndemicTree.objects.values('year').annotate(
-        total=Sum('population')
-    ).order_by('year')
+    # Get population by year with proper aggregation
+    population_by_year = list(EndemicTree.objects.values('year')
+        .annotate(total=Sum('population'))
+        .order_by('year'))
 
     context = {
         'active_page': 'dashboard',
@@ -181,9 +180,18 @@ def dashboard(request):
         'tree_population': tree_population,
         'health_percentage': health_percentage,
         'recent_trees': recent_trees,
-        'species_by_family': json.dumps(list(species_by_family)),
-        'population_by_year': json.dumps(list(population_by_year)),
-        'health_data': json.dumps(list(health_data)),
+        'species_by_family': json.dumps([{
+            'name': item['name'],
+            'count': item['total_population'] or 0
+        } for item in species_by_family]),
+        'population_by_year': json.dumps([{
+            'year': item['year'],
+            'total': item['total'] or 0
+        } for item in population_by_year]),
+        'health_data': json.dumps([{
+            'status': item['health_status'],
+            'count': item['count'] or 0
+        } for item in health_data]),
     }
     return render(request, 'app/dashboard.html', context)
 
@@ -219,75 +227,108 @@ def analytics(request):
     """
     Analytics and visualization view
     """
-    # Get data for analytics
-    species_count = TreeSpecies.objects.annotate(
-        tree_count=Count('trees')
-    ).order_by('-tree_count')[:10]
+    try:
+        # Population by year with proper aggregation
+        population_by_year = list(EndemicTree.objects.values('year')
+            .annotate(total=Sum('population'))
+            .order_by('year'))
 
-    population_by_year = EndemicTree.objects.values('year').annotate(
-        total=Sum('population')
-    ).order_by('year')
+        # Health status distribution with population counts
+        health_status_data = list(EndemicTree.objects.values('health_status')
+            .annotate(count=Sum('population'))
+            .order_by('health_status'))
 
-    # Get health status distribution
-    health_status_data = list(EndemicTree.objects.values('health_status').annotate(
-        count=Count('id')
-    ).order_by('health_status'))
+        # Family distribution data
+        family_data = list(TreeFamily.objects.annotate(
+            total_population=Sum('genera__species__trees__population'),
+            species_count=Count('genera__species', distinct=True)
+        ).values('name', 'total_population', 'species_count')
+        .order_by('-total_population')[:10])
 
-    # Get health status by year
-    health_by_year_data = list(EndemicTree.objects.values('year', 'health_status').annotate(
-        count=Count('id')
-    ).order_by('year', 'health_status'))
+        # Species distribution by genus
+        genus_data = list(TreeGenus.objects.annotate(
+            total_population=Sum('species__trees__population'),
+            species_count=Count('species', distinct=True)
+        ).values('name', 'family__name', 'total_population', 'species_count')
+        .order_by('-total_population')[:10])
 
-    # Convert to JSON for JavaScript charts
-    species_data = json.dumps([{
-        'species': s.common_name,
-        'count': s.tree_count
-    } for s in species_count])
+        # Species data with population
+        species_data = list(TreeSpecies.objects.annotate(
+            total_population=Sum('trees__population'),
+            locations_count=Count('trees__location', distinct=True)
+        ).values('common_name', 'scientific_name', 'total_population', 'locations_count')
+        .order_by('-total_population')[:10])
 
-    population_data = json.dumps(list(population_by_year))
+        # Calculate growth rate
+        growth_rate_by_year = []
+        for i in range(1, len(population_by_year)):
+            current_year = population_by_year[i]
+            prev_year = population_by_year[i - 1]
+            
+            if prev_year['total'] > 0:
+                growth_rate = ((current_year['total'] - prev_year['total']) / prev_year['total']) * 100
+            else:
+                growth_rate = 0
+            
+            growth_rate_by_year.append({
+                'year': current_year['year'],
+                'growth_rate': round(growth_rate, 2)
+            })
 
-    # Create matplotlib/seaborn charts
-    # Population distribution by family
-    plt.figure(figsize=(10, 6))
-    plt.style.use('dark_background')
+        # Location-based distribution
+        location_data = list(Location.objects.annotate(
+            total_trees=Sum('trees__population'),
+            species_count=Count('trees__species', distinct=True)
+        ).values('name', 'latitude', 'longitude', 'total_trees', 'species_count')
+        .exclude(total_trees__isnull=True)
+        .order_by('-total_trees'))
 
-    # Get family population data
-    family_data = TreeSpecies.objects.values(
-        'genus__family__name'
-    ).annotate(
-        population=Sum('trees__population')
-    ).order_by('-population')[:10]
+        # Health status by year
+        health_by_year = list(EndemicTree.objects.values('year', 'health_status')
+            .annotate(population=Sum('population'))
+            .order_by('year', 'health_status'))
 
-    if family_data:
-        df = pd.DataFrame(list(family_data))
-        if not df.empty:
-            sns.barplot(x='genus__family__name', y='population', data=df)
-            plt.title('Population by Family', color='white')
-            plt.xlabel('Family', color='white')
-            plt.ylabel('Population', color='white')
-            plt.xticks(rotation=45)
-            plt.tight_layout()
+        # Handle None values and convert Decimal to float for JSON serialization
+        def clean_data(data):
+            if isinstance(data, list):
+                return [clean_data(item) for item in data]
+            elif isinstance(data, dict):
+                return {k: clean_data(v) if v is not None else 0 for k, v in data.items()}
+            elif str(type(data)) == "<class 'decimal.Decimal'>":
+                return float(data)
+            return data
 
-            # Save plot to a temporary buffer
-            buffer = BytesIO()
-            plt.savefig(buffer, format='png', transparent=True)
-            buffer.seek(0)
-            plot_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            plt.close()
-        else:
-            plot_data = None
-    else:
-        plot_data = None
+        # Clean and prepare all data for JSON serialization
+        population_by_year = clean_data(population_by_year)
+        health_status_data = clean_data(health_status_data)
+        family_data = clean_data(family_data)
+        genus_data = clean_data(genus_data)
+        species_data = clean_data(species_data)
+        growth_rate_by_year = clean_data(growth_rate_by_year)
+        location_data = clean_data(location_data)
+        health_by_year = clean_data(health_by_year)
 
-    context = {
-        'active_page': 'analytics',
-        'species_data': species_data,
-        'population_data': population_data,
-        'plot_data': plot_data,
-        'health_status_data': json.dumps(health_status_data),
-        'health_by_year_data': json.dumps(health_by_year_data),
-    }
-    return render(request, 'app/analytics.html', context)
+        context = {
+            'active_page': 'analytics',
+            'population_data': json.dumps(population_by_year or []),
+            'health_status_data': json.dumps(health_status_data or []),
+            'family_data': json.dumps(family_data or []),
+            'genus_data': json.dumps(genus_data or []),
+            'species_data': json.dumps(species_data or []),
+            'growth_rate_by_year': json.dumps(growth_rate_by_year or []),
+            'location_data': json.dumps(location_data or []),
+            'health_by_year': json.dumps(health_by_year or [])
+        }
+
+        return render(request, 'app/analytics.html', context)
+
+    except Exception as e:
+        print(f"Analytics Error: {str(e)}")  # Add logging for debugging
+        context = {
+            'active_page': 'analytics',
+            'error_message': f"Error loading analytics: {str(e)}"
+        }
+        return render(request, 'app/analytics.html', context)
 
 
 @login_required(login_url='app:login')
@@ -310,10 +351,12 @@ def datasets(request):
     Display and manage datasets
     """
     trees = EndemicTree.objects.select_related('species', 'location').all()
+    species_list = TreeSpecies.objects.all().order_by('common_name')
 
     context = {
         'active_page': 'datasets',
         'trees': trees,
+        'species_list': species_list,
     }
     return render(request, 'app/datasets.html', context)
 
@@ -413,7 +456,34 @@ def upload_data(request):
                 family_name = request.POST.get('family')
                 genus_name = request.POST.get('genus')
                 population = int(request.POST.get('population'))
-                health_status = request.POST.get('health_status')
+
+                # Get health counts
+                healthy_count = int(request.POST.get('healthy_count', 0))
+                good_count = int(request.POST.get('good_count', 0))
+                bad_count = int(request.POST.get('bad_count', 0))
+                deceased_count = int(request.POST.get('deceased_count', 0))
+
+                # Calculate overall health status based on the distribution
+                total_count = healthy_count + good_count + bad_count + deceased_count
+                if total_count != population:
+                    raise ValueError("Health status counts do not match the total population")
+
+                # Calculate percentages
+                healthy_percent = (healthy_count / total_count) * 100
+                good_percent = (good_count / total_count) * 100
+
+                # Determine overall health status
+                if healthy_percent >= 60:
+                    health_status = 'excellent'
+                elif healthy_percent >= 40 or (healthy_percent + good_percent) >= 70:
+                    health_status = 'very_good'
+                elif healthy_percent >= 20 or (healthy_percent + good_percent) >= 50:
+                    health_status = 'good'
+                elif deceased_count / total_count <= 0.3:
+                    health_status = 'poor'
+                else:
+                    health_status = 'very_poor'
+
                 latitude = float(request.POST.get('latitude'))
                 longitude = float(request.POST.get('longitude'))
                 year = int(request.POST.get('year'))
@@ -659,7 +729,157 @@ def about(request):
 @login_required(login_url='app:login')
 def reports(request):
     """View for generating reports."""
-    return render(request, 'app/reports.html', {'active_page': 'reports'})
+    # Get all species and locations for the filters
+    species_list = TreeSpecies.objects.all().order_by('common_name')
+    location_list = Location.objects.all().order_by('name')
+
+    return render(request, 'app/reports.html', {
+        'active_page': 'reports',
+        'species_list': species_list,
+        'location_list': location_list
+    })
+
+
+@csrf_protect
+def generate_report(request):
+    """View for generating reports based on form data."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
+
+    try:
+        # Get form data
+        report_type = request.POST.get('report_type')
+        time_range = request.POST.get('time_range')
+        species_filter = request.POST.get('species_filter')
+        location_filter = request.POST.get('location_filter')
+        include_charts = request.POST.get('include_charts') == 'on'
+        include_map = request.POST.get('include_map') == 'on'
+        include_table = request.POST.get('include_table') == 'on'
+
+        # Get the current date and time
+        now = timezone.now()
+        date_str = now.strftime('%B %d, %Y')
+        time_str = now.strftime('%I:%M %p')
+
+        # Get report title based on type
+        report_titles = {
+            'species_distribution': 'Species Distribution Report',
+            'population_trends': 'Population Trends Report',
+            'health_analysis': 'Health Status Analysis Report',
+            'conservation_status': 'Conservation Status Report',
+            'spatial_density': 'Spatial Density Report'
+        }
+        report_title = report_titles.get(report_type, 'Endemic Trees Report')
+
+        # Build the report HTML
+        html = f'''
+        <div class="report-document">
+            <div class="report-header">
+                <h1 class="report-title">{report_title}</h1>
+                <p class="report-subtitle">Endemic Trees Monitoring System</p>
+                <p class="report-date">Generated on {date_str} at {time_str}</p>
+            </div>
+
+            <div class="report-section">
+                <h2 class="report-section-title">Executive Summary</h2>
+                <p>This report provides an analysis of endemic tree data collected by the Endemic Trees Monitoring System. 
+                   The report includes information on tree species, population trends, health status, and spatial distribution.</p>
+            </div>
+        '''
+
+        # Add charts section if included
+        if include_charts:
+            html += '''
+            <div class="report-section">
+                <h2 class="report-section-title">Data Visualization</h2>
+                <div class="report-chart-container">
+                    <canvas id="reportChart1"></canvas>
+                </div>
+                <div class="report-chart-container">
+                    <canvas id="reportChart2"></canvas>
+                </div>
+            </div>
+            '''
+
+        # Add map section if included
+        if include_map:
+            html += '''
+            <div class="report-section">
+                <h2 class="report-section-title">Spatial Distribution</h2>
+                <div class="report-map-container" id="reportMap"></div>
+            </div>
+            '''
+
+        # Add data table if included
+        if include_table:
+            # Query the database for tree data
+            trees = EndemicTree.objects.all()
+            
+            # Apply filters
+            if species_filter and species_filter != 'all':
+                trees = trees.filter(species_id=species_filter)
+            if location_filter and location_filter != 'all':
+                trees = trees.filter(location_id=location_filter)
+            
+            # Generate table HTML
+            html += '''
+            <div class="report-section">
+                <h2 class="report-section-title">Data Table</h2>
+                <div class="report-table-container">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Species</th>
+                                <th>Location</th>
+                                <th>Population</th>
+                                <th>Health Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            '''
+            
+            # Add table rows
+            for tree in trees[:10]:  # Limit to 10 rows for performance
+                html += f'''
+                <tr>
+                    <td>{tree.species.common_name} ({tree.species.scientific_name})</td>
+                    <td>{tree.location.name}</td>
+                    <td>{tree.population}</td>
+                    <td>{tree.health_status}</td>
+                </tr>
+                '''
+            
+            html += '''
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            '''
+
+        # Add conclusions
+        html += '''
+            <div class="report-section">
+                <h2 class="report-section-title">Conclusions and Recommendations</h2>
+                <p>Based on the data collected and analyzed in this report, the following conclusions can be drawn:</p>
+                <ul>
+                    <li>The overall population of endemic trees shows varying distributions across different locations.</li>
+                    <li>Conservation efforts should be focused on areas with lower tree density.</li>
+                    <li>Regular monitoring and assessment of tree health status is essential.</li>
+                </ul>
+            </div>
+        </div>
+        '''
+
+        return JsonResponse({
+            'reportContent': html,
+            'success': True
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e),
+            'success': False
+        }, status=500)
 
 
 # API Views
@@ -745,29 +965,37 @@ def seed_data(request):
         # Convert to GeoJSON format
         features = []
         for seed in seeds:
-            feature = {
-                'type': 'Feature',
-                'geometry': {
-                    'type': 'Point',
-                    'coordinates': [seed.location.longitude, seed.location.latitude]
-                },
-                'properties': {
-                    'id': str(seed.id),
-                    'species_id': str(seed.species.id),
-                    'common_name': seed.species.common_name,
-                    'scientific_name': seed.species.scientific_name,
-                    'family': seed.species.genus.family.name,
-                    'genus': seed.species.genus.name,
-                    'quantity': seed.quantity,
-                    'planting_date': seed.planting_date.strftime('%Y-%m-%d'),
-                    'germination_status': seed.germination_status,
-                    'survival_rate': seed.survival_rate if seed.survival_rate is not None else 'N/A',
-                    'location': seed.location.name,
-                    'notes': seed.notes or '',
-                    'entity_type': 'seed'  # To distinguish from mature trees
+            try:
+                feature = {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [float(seed.location.longitude), float(seed.location.latitude)]
+                    },
+                    'properties': {
+                        'id': str(seed.id),
+                        'species_id': str(seed.species.id),
+                        'common_name': seed.species.common_name,
+                        'scientific_name': seed.species.scientific_name,
+                        'family': seed.species.genus.family.name,
+                        'genus': seed.species.genus.name,
+                        'quantity': seed.quantity,
+                        'planting_date': seed.planting_date.strftime('%Y-%m-%d'),
+                        'germination_status': seed.germination_status,
+                        'germination_date': seed.germination_date.strftime(
+                            '%Y-%m-%d') if seed.germination_date else None,
+                        'survival_rate': float(seed.survival_rate) if seed.survival_rate is not None else None,
+                        'expected_maturity_date': seed.expected_maturity_date.strftime(
+                            '%Y-%m-%d') if seed.expected_maturity_date else None,
+                        'location': seed.location.name,
+                        'notes': seed.notes or '',
+                        'entity_type': 'seed'  # To distinguish from mature trees
+                    }
                 }
-            }
-            features.append(feature)
+                features.append(feature)
+            except Exception as e:
+                print(f"Error processing seed {seed.id}: {str(e)}")
+                continue
 
         geojson = {
             'type': 'FeatureCollection',
@@ -871,15 +1099,48 @@ def analytics_data(request):
         total=Sum('genera__species__trees__population')
     ).values('name', 'total').order_by('-total')[:10])
 
-    # Health status distribution
+    # Health status distribution with detailed counts
     health_status_data = list(EndemicTree.objects.values('health_status').annotate(
-        count=Count('id')
+        count=Count('id'),
+        total_healthy=Sum('healthy_count'),
+        total_good=Sum('good_count'),
+        total_bad=Sum('bad_count'),
+        total_deceased=Sum('deceased_count')
     ).order_by('health_status'))
 
-    # Health status by year
+    # Health status by year with detailed counts
     health_by_year_data = list(EndemicTree.objects.values('year', 'health_status').annotate(
-        count=Count('id')
+        count=Count('id'),
+        total_healthy=Sum('healthy_count'),
+        total_good=Sum('good_count'),
+        total_bad=Sum('bad_count'),
+        total_deceased=Sum('deceased_count')
     ).order_by('year', 'health_status'))
+
+    # Calculate overall health metrics
+    total_trees = EndemicTree.objects.aggregate(
+        total_healthy=Sum('healthy_count'),
+        total_good=Sum('good_count'),
+        total_bad=Sum('bad_count'),
+        total_deceased=Sum('deceased_count')
+    )
+
+    total_count = sum(v for v in total_trees.values() if v is not None)
+
+    if total_count > 0:
+        health_metrics = {
+            'healthy_percentage': (total_trees['total_healthy'] or 0) / total_count * 100,
+            'good_percentage': (total_trees['total_good'] or 0) / total_count * 100,
+            'bad_percentage': (total_trees['total_bad'] or 0) / total_count * 100,
+            'deceased_percentage': (total_trees['total_deceased'] or 0) / total_count * 100,
+        }
+    else:
+        health_metrics = {
+            'healthy_percentage': 0,
+            'good_percentage': 0,
+            'bad_percentage': 0,
+            'deceased_percentage': 0,
+        }
 
     # Historical data analytics based on year
     # Get unique years
@@ -913,14 +1174,6 @@ def analytics_data(request):
 
     # Environmental metrics (simulated data)
     # In a real app, these would be calculated from actual data
-    conservation_status = [
-        {'status': 'Least Concern', 'count': 48},
-        {'status': 'Near Threatened', 'count': 23},
-        {'status': 'Vulnerable', 'count': 15},
-        {'status': 'Endangered', 'count': 7},
-        {'status': 'Critically Endangered', 'count': 3},
-    ]
-
     ecological_zones = [
         {'zone': 'Primary Forest', 'count': 45},
         {'zone': 'Secondary Forest', 'count': 27},
@@ -938,17 +1191,18 @@ def analytics_data(request):
             'simpson_index': round(0.8 + (year - min(year_list)) * 0.02, 2),  # Simulated data
         })
 
+    # Add health metrics to the response
     data = {
         'species_count': species_count,
         'population_by_year': population_by_year,
         'population_by_family': population_by_family,
         'species_richness_by_year': species_richness_by_year,
         'growth_rate_by_year': growth_rate_by_year,
-        'conservation_status': conservation_status,
-        'ecological_zones': ecological_zones,
+        'conservation_status': ecological_zones,
         'biodiversity_indices': biodiversity_indices,
         'health_status_data': health_status_data,
-        'health_by_year_data': health_by_year_data
+        'health_by_year_data': health_by_year_data,
+        'health_metrics': health_metrics
     }
 
     return JsonResponse(data)
@@ -1017,3 +1271,95 @@ def save_setting(request):
         return JsonResponse({'status': 'success', 'key': key, 'value': value})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid key or value'}, status=400)
+
+
+@login_required(login_url='app:login')
+def edit_tree(request, tree_id):
+    """View for editing a tree record."""
+    try:
+        tree = get_object_or_404(EndemicTree, id=tree_id)
+        
+        if request.method == 'POST':
+            try:
+                # Get form data
+                species_id = request.POST.get('species')
+                population = int(request.POST.get('population'))
+                year = int(request.POST.get('year'))
+                health_status = request.POST.get('health_status')
+                latitude = float(request.POST.get('latitude'))
+                longitude = float(request.POST.get('longitude'))
+                notes = request.POST.get('notes')
+
+                # Validate data
+                if not all([species_id, population, year, health_status, latitude, longitude]):
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'All required fields must be provided'
+                    }, status=400)
+
+                # Update tree record
+                tree.species_id = species_id
+                tree.population = population
+                tree.year = year
+                tree.health_status = health_status
+                tree.notes = notes
+
+                # Update location
+                if not tree.location:
+                    from .models import Location
+                    tree.location = Location.objects.create(
+                        latitude=latitude,
+                        longitude=longitude
+                    )
+                else:
+                    tree.location.latitude = latitude
+                    tree.location.longitude = longitude
+                    tree.location.save()
+
+                tree.save()
+
+                return JsonResponse({'success': True})
+            except (ValueError, TypeError) as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Invalid data format: {str(e)}'
+                }, status=400)
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                }, status=500)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error accessing tree record: {str(e)}'
+        }, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@login_required(login_url='app:login')
+@require_POST
+def delete_tree(request, tree_id):
+    """View for deleting a tree record."""
+    try:
+        tree = get_object_or_404(EndemicTree, id=tree_id)
+        location = tree.location
+        tree.delete()
+        
+        # Delete the location if it's not used by any other tree
+        if location and not location.trees.exists():
+            location.delete()
+            
+        return JsonResponse({'success': True})
+    except EndemicTree.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Tree record not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

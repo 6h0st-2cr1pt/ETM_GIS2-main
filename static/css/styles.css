@@ -97,6 +97,7 @@ a {
   Sidebar Styles
   ====================================== */
 .sidebar-container {
+  position: fixed;
   width: var(--sidebar-width);
   height: 100%;
   background: var(--bg-sidebar);
@@ -146,10 +147,22 @@ a {
   height: 36px;
   border-radius: 50%;
   transition: background-color var(--transition-speed) ease;
+  padding: 0;
+}
+
+.toggle-icon {
+  width: 40px;
+  height: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease;
 }
 
 .sidebar-toggle:hover {
   background-color: var(--bg-hover);
+}
+
+.sidebar-toggle:hover .toggle-icon {
+  transform: rotate(180deg);
 }
 
 .sidebar-menu {
@@ -311,11 +324,14 @@ a {
   height: 100vh;
   overflow-y: auto;
   padding: 1rem;
+  margin-left: var(--sidebar-width);
   transition: margin-left var(--transition-speed) ease;
+  width: calc(100% - var(--sidebar-width));
 }
 
 .main-content.expanded {
-  margin-left: calc(var(--sidebar-collapsed-width) - var(--sidebar-width));
+  margin-left: var(--sidebar-collapsed-width);
+  width: calc(100% - var(--sidebar-collapsed-width));
 }
 
 .content-container {
@@ -471,11 +487,7 @@ html[data-theme="light"] .form-select:focus {
 
 @media (max-width: 768px) {
   .sidebar-container {
-    position: fixed;
-    left: 0;
-    top: 0;
     transform: translateX(-100%);
-    z-index: 1100;
   }
 
   .sidebar-container.active {
@@ -483,7 +495,13 @@ html[data-theme="light"] .form-select:focus {
   }
 
   .main-content {
-    margin-left: 0 !important;
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .main-content.expanded {
+    margin-left: 0;
+    width: 100%;
   }
 
   .floating-controls {

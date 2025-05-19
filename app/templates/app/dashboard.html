@@ -53,74 +53,55 @@
     <div class="dashboard-charts-container">
         <div class="dashboard-chart">
             <h3>Population by Year</h3>
-            <canvas id="populationChart"></canvas>
+            <canvas id="populationChart" data-population="{{ population_by_year }}"></canvas>
+            <div class="no-data-message" style="display: none;">No data available</div>
         </div>
 
         <div class="dashboard-chart">
             <h3>Species Distribution</h3>
-            <canvas id="speciesChart"></canvas>
+            <canvas id="speciesChart" data-species="{{ species_by_family }}"></canvas>
+            <div class="no-data-message" style="display: none;">No data available</div>
         </div>
 
         <div class="dashboard-chart">
             <h3>Health Status Distribution</h3>
-            <canvas id="healthChart"></canvas>
+            <canvas id="healthChart" data-health="{{ health_data }}"></canvas>
+            <div class="no-data-message" style="display: none;">No data available</div>
         </div>
     </div>
 
     <div class="dashboard-table-container">
-        <h3>Recent Records</h3>
-        <div class="table-responsive">
+        <h3>Recent Updates</h3>
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Common Name</th>
-                        <th>Scientific Name</th>
+                    <th>Species</th>
+                    <th>Location</th>
                         <th>Population</th>
                         <th>Health Status</th>
-                        <th>Year</th>
-                        <th>Notes</th>
+                    <th>Last Updated</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for tree in recent_trees %}
                     <tr>
                         <td>{{ tree.species.common_name }}</td>
-                        <td><em>{{ tree.species.scientific_name }}</em></td>
+                    <td>{{ tree.location.name }}</td>
                         <td>{{ tree.population }}</td>
-                        <td>
-                            {% if tree.health_status == 'very_poor' %}
-                                <span class="badge bg-danger">Very Poor</span>
-                            {% elif tree.health_status == 'poor' %}
-                                <span class="badge bg-warning text-dark">Poor</span>
-                            {% elif tree.health_status == 'good' %}
-                                <span class="badge bg-success">Good</span>
-                            {% elif tree.health_status == 'very_good' %}
-                                <span class="badge bg-primary">Very Good</span>
-                            {% elif tree.health_status == 'excellent' %}
-                                <span class="badge bg-info">Excellent</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Unknown</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ tree.year }}</td>
-                        <td>{{ tree.notes|truncatechars:30 }}</td>
+                    <td>{{ tree.health_status|title }}</td>
+                    <td>{{ tree.updated_at|date:"M d, Y" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center">No data available</td>
+                    <td colspan="5" class="text-center">No recent updates</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Pass health data to JavaScript
-    const healthData = {{ health_data|safe }};
-</script>
 <script src="/static/js/dashboard.js"></script>
 {% endblock %}

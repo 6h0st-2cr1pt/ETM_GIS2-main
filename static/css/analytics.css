@@ -1,13 +1,22 @@
 /* Analytics Styles */
 .analytics-container {
-  padding: 1rem 0;
+  padding: 2rem;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .analytics-charts-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.analytics-metrics-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .analytics-chart-card {
@@ -17,10 +26,12 @@
   border-radius: var(--card-border-radius);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 1.5rem;
-  height: 350px;
+  padding: 2rem;
+  height: 450px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .analytics-chart-card:hover {
@@ -33,6 +44,13 @@
   font-weight: 600;
   margin-bottom: 1rem;
   color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.analytics-chart-card canvas {
+  width: 100% !important;
+  height: calc(100% - 3rem) !important;
+  max-height: 400px;
 }
 
 .analytics-advanced-container {
@@ -49,12 +67,6 @@
   padding-left: 1rem;
 }
 
-.analytics-metrics-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-}
-
 .metrics-card {
   background: var(--bg-card);
   backdrop-filter: blur(var(--glass-blur));
@@ -62,8 +74,10 @@
   border-radius: var(--card-border-radius);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 1.5rem;
-  height: 350px;
+  padding: 2rem;
+  height: 450px;
+  display: flex;
+  flex-direction: column;
 }
 
 .metrics-card h3 {
@@ -71,6 +85,13 @@
   font-weight: 600;
   margin-bottom: 1rem;
   color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.metrics-card canvas {
+  width: 100% !important;
+  height: calc(100% - 3rem) !important;
+  max-height: 400px;
 }
 
 .mini-map {
@@ -82,9 +103,12 @@
 
 .matplotlib-chart {
   max-width: 100%;
-  height: auto;
+  height: calc(100% - 60px);
+  width: 100%;
+  object-fit: contain;
   display: block;
   margin: 0 auto;
+  padding: 0.5rem;
 }
 
 .no-data-message {
@@ -97,9 +121,102 @@
 }
 
 /* Responsive adjustments */
+@media (max-width: 1400px) {
+  .analytics-container {
+    padding: 1.5rem;
+  }
+  
+  .analytics-charts-container,
+  .analytics-metrics-container {
+    gap: 1.5rem;
+  }
+  
+  .analytics-chart-card,
+  .metrics-card {
+    padding: 1.5rem;
+  }
+}
+
 @media (max-width: 992px) {
+  .analytics-container {
+    padding: 1rem;
+  }
+
   .analytics-charts-container,
   .analytics-metrics-container {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
+  
+  .analytics-chart-card,
+  .metrics-card {
+    height: 400px;
+  }
+}
+
+@media (max-width: 576px) {
+  .analytics-container {
+    padding: 0.75rem;
+  }
+  
+  .analytics-charts-container,
+  .analytics-metrics-container {
+    gap: 1rem;
+  }
+  
+  .analytics-chart-card,
+  .metrics-card {
+    padding: 1rem;
+    height: 350px;
+  }
+}
+
+.health-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.health-metric-item {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: var(--border-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.metric-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+}
+
+.metric-percentage {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Light theme adjustments */
+html[data-theme="light"] .health-metric-item {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="light"] .metric-label {
+  color: var(--text-primary);
+}
+
+html[data-theme="light"] .metric-value {
+  color: var(--text-primary);
+}
+
+html[data-theme="light"] .metric-percentage {
+  color: var(--text-secondary);
 }
