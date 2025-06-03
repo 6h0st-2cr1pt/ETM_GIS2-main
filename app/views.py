@@ -142,58 +142,78 @@ def dashboard(request):
     """
     Main dashboard view
     """
-    # Get basic stats for dashboard
-    total_trees = EndemicTree.objects.count()
-    unique_species = TreeSpecies.objects.count()
-    tree_population = EndemicTree.objects.aggregate(total_population=Sum('population'))['total_population'] or 0
+    try:
+        # Get basic stats for dashboard with proper null checks
+        total_trees = EndemicTree.objects.count()
+        unique_species = TreeSpecies.objects.count()
+        tree_population = EndemicTree.objects.aggregate(total_population=Sum('population'))['total_population'] or 0
 
-    # Calculate health percentage (trees in good health or better)
-    total_population = tree_population or 1  # Avoid division by zero
-    good_health_population = EndemicTree.objects.filter(
-        health_status__in=['good', 'very_good', 'excellent']
-    ).aggregate(total=Sum('population'))['total'] or 0
+        # Calculate health percentage (trees in good health or better)
+        total_population = tree_population or 0  # Avoid division by zero
+        if total_population > 0:
+            good_health_population = EndemicTree.objects.filter(
+                health_status__in=['good', 'very_good', 'excellent']
+            ).aggregate(total=Sum('population'))['total'] or 0
+            health_percentage = round((good_health_population / total_population) * 100)
+        else:
+            health_percentage = 0
 
-    health_percentage = round((good_health_population / total_population) * 100)
+        # Get health status distribution for chart
+        health_data = list(EndemicTree.objects.values('health_status').annotate(
+            count=Sum('population')  # Changed from Count('id') to Sum('population')
+        ).order_by('health_status'))
 
-    # Get health status distribution for chart
-    health_data = list(EndemicTree.objects.values('health_status').annotate(
-        count=Sum('population')  # Changed from Count('id') to Sum('population')
-    ).order_by('health_status'))
+        # Get most recent data
+        recent_trees = EndemicTree.objects.select_related('species', 'location').all().order_by('-created_at')[:5]
 
-    # Get most recent data
-    recent_trees = EndemicTree.objects.select_related('species', 'location').all().order_by('-created_at')[:5]
+        # Get species by family for chart with null checks
+        species_by_family = list(TreeFamily.objects.annotate(
+            total_population=Sum('genera__species__trees__population')
+        ).values('name', 'total_population').order_by('-total_population')[:10])
 
-    # Get species by family for chart
-    species_by_family = list(TreeFamily.objects.annotate(
-        total_population=Sum('genera__species__trees__population')
-    ).values('name', 'total_population').order_by('-total_population')[:10])
+        # Get population by year with proper aggregation and null checks
+        population_by_year = list(EndemicTree.objects.values('year')
+            .annotate(total=Sum('population'))
+            .order_by('year'))
 
-    # Get population by year with proper aggregation
-    population_by_year = list(EndemicTree.objects.values('year')
-        .annotate(total=Sum('population'))
-        .order_by('year'))
+        # Prepare context with empty data handling
+        context = {
+            'active_page': 'dashboard',
+            'total_trees': total_trees or 0,
+            'unique_species': unique_species or 0,
+            'tree_population': tree_population or 0,
+            'health_percentage': health_percentage,
+            'recent_trees': recent_trees,
+            'species_by_family': json.dumps([{
+                'name': item['name'],
+                'count': item['total_population'] or 0
+            } for item in (species_by_family or [])]),
+            'population_by_year': json.dumps([{
+                'year': item['year'],
+                'total': item['total'] or 0
+            } for item in (population_by_year or [])]),
+            'health_data': json.dumps([{
+                'status': item['health_status'],
+                'count': item['count'] or 0
+            } for item in (health_data or [])])
+        }
 
-    context = {
-        'active_page': 'dashboard',
-        'total_trees': total_trees,
-        'unique_species': unique_species,
-        'tree_population': tree_population,
-        'health_percentage': health_percentage,
-        'recent_trees': recent_trees,
-        'species_by_family': json.dumps([{
-            'name': item['name'],
-            'count': item['total_population'] or 0
-        } for item in species_by_family]),
-        'population_by_year': json.dumps([{
-            'year': item['year'],
-            'total': item['total'] or 0
-        } for item in population_by_year]),
-        'health_data': json.dumps([{
-            'status': item['health_status'],
-            'count': item['count'] or 0
-        } for item in health_data]),
-    }
-    return render(request, 'app/dashboard.html', context)
+        return render(request, 'app/dashboard.html', context)
+    except Exception as e:
+        print(f"Dashboard Error: {str(e)}")  # Add logging for debugging
+        # Return empty data in case of error
+        context = {
+            'active_page': 'dashboard',
+            'total_trees': 0,
+            'unique_species': 0,
+            'tree_population': 0,
+            'health_percentage': 0,
+            'recent_trees': [],
+            'species_by_family': '[]',
+            'population_by_year': '[]',
+            'health_data': '[]'
+        }
+        return render(request, 'app/dashboard.html', context)
 
 
 @login_required(login_url='app:login')
@@ -204,8 +224,10 @@ def gis(request):
     # Get all available map layers
     layers = MapLayer.objects.filter(is_active=True)
 
-    # Get all unique tree species for filter
-    tree_species = TreeSpecies.objects.all().order_by('common_name')
+    # Get only tree species that have associated trees
+    tree_species = TreeSpecies.objects.filter(
+        trees__isnull=False  # Only species that have trees
+    ).distinct().order_by('common_name')  # Remove duplicates and order by common name
 
     # Get default pin style
     try:
@@ -228,6 +250,20 @@ def analytics(request):
     Analytics and visualization view
     """
     try:
+        # Check if there's any data in the database
+        if not EndemicTree.objects.exists():
+            return render(request, 'app/analytics.html', {
+                'active_page': 'analytics',
+                'population_data': '[]',
+                'health_status_data': '[]',
+                'family_data': '[]',
+                'genus_data': '[]',
+                'species_data': '[]',
+                'growth_rate_by_year': '[]',
+                'location_data': '[]',
+                'health_by_year': '[]'
+            })
+
         # Population by year with proper aggregation
         population_by_year = list(EndemicTree.objects.values('year')
             .annotate(total=Sum('population'))
@@ -261,19 +297,20 @@ def analytics(request):
 
         # Calculate growth rate
         growth_rate_by_year = []
-        for i in range(1, len(population_by_year)):
-            current_year = population_by_year[i]
-            prev_year = population_by_year[i - 1]
-            
-            if prev_year['total'] > 0:
-                growth_rate = ((current_year['total'] - prev_year['total']) / prev_year['total']) * 100
-            else:
-                growth_rate = 0
-            
-            growth_rate_by_year.append({
-                'year': current_year['year'],
-                'growth_rate': round(growth_rate, 2)
-            })
+        if len(population_by_year) > 1:
+            for i in range(1, len(population_by_year)):
+                current_year = population_by_year[i]
+                prev_year = population_by_year[i - 1]
+                
+                if prev_year['total'] and prev_year['total'] > 0:
+                    growth_rate = ((current_year['total'] - prev_year['total']) / prev_year['total']) * 100
+                else:
+                    growth_rate = 0
+                
+                growth_rate_by_year.append({
+                    'year': current_year['year'],
+                    'growth_rate': round(growth_rate, 2)
+                })
 
         # Location-based distribution
         location_data = list(Location.objects.annotate(
@@ -299,34 +336,42 @@ def analytics(request):
             return data
 
         # Clean and prepare all data for JSON serialization
-        population_by_year = clean_data(population_by_year)
-        health_status_data = clean_data(health_status_data)
-        family_data = clean_data(family_data)
-        genus_data = clean_data(genus_data)
-        species_data = clean_data(species_data)
-        growth_rate_by_year = clean_data(growth_rate_by_year)
-        location_data = clean_data(location_data)
-        health_by_year = clean_data(health_by_year)
+        population_by_year = clean_data(population_by_year or [])
+        health_status_data = clean_data(health_status_data or [])
+        family_data = clean_data(family_data or [])
+        genus_data = clean_data(genus_data or [])
+        species_data = clean_data(species_data or [])
+        growth_rate_by_year = clean_data(growth_rate_by_year or [])
+        location_data = clean_data(location_data or [])
+        health_by_year = clean_data(health_by_year or [])
 
         context = {
             'active_page': 'analytics',
-            'population_data': json.dumps(population_by_year or []),
-            'health_status_data': json.dumps(health_status_data or []),
-            'family_data': json.dumps(family_data or []),
-            'genus_data': json.dumps(genus_data or []),
-            'species_data': json.dumps(species_data or []),
-            'growth_rate_by_year': json.dumps(growth_rate_by_year or []),
-            'location_data': json.dumps(location_data or []),
-            'health_by_year': json.dumps(health_by_year or [])
+            'population_data': json.dumps(population_by_year),
+            'health_status_data': json.dumps(health_status_data),
+            'family_data': json.dumps(family_data),
+            'genus_data': json.dumps(genus_data),
+            'species_data': json.dumps(species_data),
+            'growth_rate_by_year': json.dumps(growth_rate_by_year),
+            'location_data': json.dumps(location_data),
+            'health_by_year': json.dumps(health_by_year)
         }
 
         return render(request, 'app/analytics.html', context)
 
     except Exception as e:
         print(f"Analytics Error: {str(e)}")  # Add logging for debugging
+        # Return empty data in case of error
         context = {
             'active_page': 'analytics',
-            'error_message': f"Error loading analytics: {str(e)}"
+            'population_data': '[]',
+            'health_status_data': '[]',
+            'family_data': '[]',
+            'genus_data': '[]',
+            'species_data': '[]',
+            'growth_rate_by_year': '[]',
+            'location_data': '[]',
+            'health_by_year': '[]'
         }
         return render(request, 'app/analytics.html', context)
 

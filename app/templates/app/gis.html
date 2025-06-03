@@ -59,12 +59,18 @@
                         <label for="allTrees">All Trees</label>
                     </div>
                     
-                    {% for species in tree_species %}
-                    <div class="control-option">
-                        <input type="radio" name="treeFilter" id="tree{{ species.id }}" value="{{ species.id }}">
-                        <label for="tree{{ species.id }}">{{ species.common_name }}</label>
-                    </div>
-                    {% endfor %}
+                    {% if tree_species %}
+                        {% for species in tree_species %}
+                        <div class="control-option">
+                            <input type="radio" name="treeFilter" id="tree{{ species.id }}" value="{{ species.id }}">
+                            <label for="tree{{ species.id }}">{{ species.common_name }}</label>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-species-message">
+                            <p>No tree species found in the database.</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

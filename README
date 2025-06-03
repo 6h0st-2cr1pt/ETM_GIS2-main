@@ -1,9 +1,11 @@
-[ django-admin startproject app_name ]
+[ django-admin startproject myproject . ]
 manage.py
 asgi.py
 settings.py
 urls.py
 wsgi.py
+
+The dot ensures the project files are created directly within your desired folder, not nested in another folder with the same name.
 
 [ python manage.py startapp app_name ]
 admin.py
@@ -24,7 +26,7 @@ python manage.py runserver
 Step 1: Activate the Virtual Environment using the terminal in VsCode.
         Type - [ venv\Scripts\Activate ]
 
-Step 2: Run the software by typing a command in the Treminal.
+Step 2: Run the software by typing a command in the Terminal.
         Type - [ python manage.py runserver ]
 
 Step 3: click the provided link in the terminal to open the software.

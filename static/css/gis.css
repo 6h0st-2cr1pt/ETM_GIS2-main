@@ -636,3 +636,17 @@ html[data-theme="light"] .health-count {
   color: var(--text-primary);
   background: rgba(0, 0, 0, 0.05);
 }
+
+.no-species-message {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-sm);
+  margin-top: 0.5rem;
+}
+
+.no-species-message p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  margin: 0;
+  text-align: center;
+}
