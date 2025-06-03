@@ -100,7 +100,9 @@ For development purposes, the application includes:
 
 ## License
 
-This project is licensed under the terms included in the LICENSE file.
+This project is licensed under the [MIT License](LICENSE) - see the [LICENSE](LICENSE) file for details.
+
+Copyright © 2025 Jonald Sabordo
 
 ## Note
 
